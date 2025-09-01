@@ -3,14 +3,6 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++
-// FOLLOWING THREE DELARATIONS ADDED BY ROBERT EDGAR
-// to suppress implicit declarations warnings from gcc
-long lseek();
-int read();
-int close();
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 #ifdef _LARGEFILE64_SOURCE
 #  ifndef _LARGEFILE_SOURCE
 #    define _LARGEFILE_SOURCE 1
@@ -56,6 +48,8 @@ int close();
 #  define read _read
 #  define write _write
 #  define close _close
+#else
+#  include <unistd.h>
 #endif
 
 #ifdef NO_DEFLATE       /* for compatibility with old definition */
