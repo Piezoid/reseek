@@ -1,0 +1,20 @@
+/*
+ * bca_reader.vscript
+ * This script controls the public API of the bca_reader.so shared library.
+ */
+{
+  global:
+    /*
+     * Export only the Python module initialization function. This is the
+     * single entry point required by the Python interpreter.
+     */
+    PyInit_bca_reader;
+
+  local:
+    /*
+     * Hide all other global symbols. The wildcard '*' matches everything
+     * not explicitly exported above. This prevents symbol collisions and
+     * minimizes the module's attack surface.
+     */
+    *;
+};
