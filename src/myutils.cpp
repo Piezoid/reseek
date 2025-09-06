@@ -745,7 +745,7 @@ void SetLogFileName(const string &FileName)
 	g_fLog = CreateStdioFile(FileName);
 	}
 
-void Log(const char *Format, ...)
+WEAK void Log(const char *Format, ...)
 	{
 	if (g_fLog == 0)
 		return;
@@ -756,7 +756,7 @@ void Log(const char *Format, ...)
 	fflush(g_fLog);
 	}
 
-void Die_(const char *Format, ...)
+WEAK void Die_(const char *Format, ...)
 	{
 	string Msg;
 
@@ -797,7 +797,7 @@ void Die_(const char *Format, ...)
 	exit(1);
 	}
 
-void Warning_(const char *Format, ...)
+WEAK void Warning_(const char *Format, ...)
 	{	
 	string Msg;
 

@@ -67,9 +67,11 @@ typedef unsigned uint;
 #if		defined(_MSC_VER)
 typedef __int64 int64;
 typedef unsigned __int64 uint64;
+#define WEAK /* No support weak function symbols in MSVC */
 #elif defined(__GNUC__)
 typedef long long int64;
 typedef unsigned long long uint64;
+#define WEAK __attribute__((weak))
 #else	
 #error	"int64 typedefs"
 #endif
