@@ -3,6 +3,7 @@
 
 #include "myutils.h"
 #include "features.h"
+#include "arrays.h"
 //#include "objcounter.h"
 
 class DSS;
@@ -57,11 +58,11 @@ public:
 	void ToPDB(const string &FileName) const;
 	void GetXFormChain_tR(
 	  const vector<double> &t,
-	  const vector<vector<double> > &R,
+	  const Matrix<double> &R,
 	  PDBChain &XChain) const;
 	void GetXFormChain_tR(
 	  const vector<float> &t,
-	  const vector<vector<float> > &R,
+	  const Matrix<float> &R,
 	  PDBChain &XChain) const;
 	void LogMe(bool WithCoords = false) const;
 	void GetXYZ(uint Pos, float &x, float &y, float &z) const;

@@ -6,7 +6,7 @@ void LogVec(const string &Msg, const vector<double> &v)
 	Log("%s(%.2f, %.2f, %.2f)\n", Msg.c_str(), v[X], v[Y], v[Z]);
 	}
 
-void LogMx(const string &Msg, const vector<vector<double> > &Mx)
+void LogMx(const string &Msg, const Matrix<double> &Mx)
 	{
 	Log("\n");
 	Log("%-10.10s    x         y         z\n", Msg.c_str());
@@ -35,9 +35,9 @@ void LogMx(const string &Msg, const vector<vector<double> > &Mx)
 	Log("AB=%.2f, BC=%.2f, AC=%.2f\n", AB, BC, AC);
 	}
 
-void GetIdentityMx(vector<vector<double> > &Mx)
+void GetIdentityMx(Matrix<double> &Mx)
 	{
-	Resize3x3(Mx);
+	Mx = Allocate3x3();
 
 	Mx[0][0] = 1;
 	Mx[0][1] = 0;
@@ -64,20 +64,28 @@ void CrossProduct(
 	}
 
 void XFormMx(
-  const vector<vector<double> > &Mx,
+  const Matrix<double> &Mx,
   const vector<double> &t,
-  const vector<vector<double> > &R,
-  vector<vector<double> > &XMx)
+  const Matrix<double> &R,
+  Matrix<double> &XMx)
 	{
-	Resize3x3(XMx);
+	XMx = Allocate3x3();
 	for (uint i = 0; i < 3; ++i)
-		XFormPt(Mx[i], t, R, XMx[i]);
+		{
+		vector<double> row(3);
+		for (uint j = 0; j < 3; ++j)
+			row[j] = Mx[i][j];
+		vector<double> transformed_row;
+		XFormPt(row, t, R, transformed_row);
+		for (uint j = 0; j < 3; ++j)
+			XMx[i][j] = transformed_row[j];
+		}
 	}
 
 void XFormPt(
   const vector<double> &Pt,
   const vector<double> &t,
-  const vector<vector<double> > &R,
+  const Matrix<double> &R,
   vector<double> &XPt)
 	{
 	Resize3(XPt);
@@ -96,7 +104,7 @@ void XFormPt(
 void XFormPt(
   const vector<float> &Pt,
   const vector<float> &t,
-  const vector<vector<float> > &R,
+  const Matrix<float> &R,
   vector<float> &XPt)
 	{
 	Resize3(XPt);
@@ -112,11 +120,10 @@ void XFormPt(
 
 	}
 
-void RotateMx(const vector<vector<double> > &Mx,
-  uint Axis, double Theta, vector<vector<double> > &RotatedMx)
+void RotateMx(const Matrix<double> &Mx,
+  uint Axis, double Theta, Matrix<double> &RotatedMx)
 	{
-	RotatedMx.clear();
-	RotatedMx.resize(3);
+	RotatedMx = Allocate3x3();
 
 	uint OtherAxis_i = GetOtherAxis_i(Axis);
 	uint OtherAxis_j = GetOtherAxis_j(Axis);
@@ -126,8 +133,6 @@ void RotateMx(const vector<vector<double> > &Mx,
 
 	for (uint k = 0; k < 3; ++k)
 		{
-		RotatedMx[k].resize(3);
-
 		RotatedMx[k][Axis] = Mx[k][Axis];
 
 		double Coord_i = Mx[k][OtherAxis_i];

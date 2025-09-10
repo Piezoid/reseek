@@ -1,5 +1,8 @@
 #pragma once
 
+#include "myutils.h"
+#include "arrays.h"
+
 double dot(const double a[3], const double b[3]);
 void transform(const double t[3], const double u[3][3],
   const double x[3], double x_transformed[3]);
@@ -21,35 +24,35 @@ const uint PALMCOREM = 150;
 extern const uint MotifLVec[3];
 
 void LogVec(const string &Msg, const vector<double> &v);
-void LogMx(const string &Msg, const vector<vector<double> > &Mx);
-double GetMxDeterminant(const vector<vector<double> > &Mx);
-void InvertMx(const vector<vector<double> > &Mx,
-  vector<vector<double> > &InvMx);
-void MulMxVec(const vector<vector<double> > &Mx,
+void LogMx(const string &Msg, const Matrix<double> &Mx);
+double GetMxDeterminant(const Matrix<double> &Mx);
+void InvertMx(const Matrix<double> &Mx,
+  Matrix<double> &InvMx);
+void MulMxVec(const Matrix<double> &Mx,
   const vector<double> &Vec,
   vector<double> &Result);
 void MulMx(
-  const vector<vector<double> > &A,
-  const vector<vector<double> > &B,
-  vector<vector<double> > &Prod);
-void GetBasisR(const vector<vector<double> > &Basis,
-  vector<vector<double> > &R);
-void LogMx(const string &Msg, const vector<vector<double> > &Mx);
-void RotateMx(const vector<vector<double> > &Mx,
-  uint Axis, double Theta, vector<vector<double> > &RotatedMx);
+  const Matrix<double> &A,
+  const Matrix<double> &B,
+  Matrix<double> &Prod);
+void GetBasisR(const Matrix<double> &Basis,
+  Matrix<double> &R);
+void LogMx(const string &Msg, const Matrix<double> &Mx);
+void RotateMx(const Matrix<double> &Mx,
+  uint Axis, double Theta, Matrix<double> &RotatedMx);
 void CrossProduct(
   const vector<double> &a,
   const vector<double> &b,
   vector<double> &Prod);
 void GetTriForm(
-  vector<vector<double> > &MotifCoords,
+  Matrix<double> &MotifCoords,
   vector<double> &t,
-  vector<vector<double> > &R);
+  Matrix<double> &R);
 
-void GetTriangleCentroid(const vector<vector<double> > &MotifCoords,
+void GetTriangleCentroid(const Matrix<double> &MotifCoords,
   vector<double> &CentroidCoords);
-void GetTriangleBasis(const vector<vector<double> > &MotifCoords,
-  vector<double> &CentroidCoords, vector<vector<double> > &Basis);
+void GetTriangleBasis(const Matrix<double> &MotifCoords,
+  vector<double> &CentroidCoords, Matrix<double> &Basis);
 
 static inline uint GetOtherAxis_i(uint Axis) { return (Axis+1)%3;  }
 static inline uint GetOtherAxis_j(uint Axis) { return (Axis+2)%3;  }
@@ -57,11 +60,9 @@ static inline uint GetOtherAxis_j(uint Axis) { return (Axis+2)%3;  }
 static inline void Resize3(vector<double> &v) { v.resize(3); }
 static inline void Resize3(vector<float> &v) { v.resize(3); }
 
-static inline void Resize3x3(vector<vector<double> > &Mx)
+static inline Matrix<double> Allocate3x3()
 	{
-	Mx.resize(3);
-	for (uint i = 0; i < 3; ++i)
-		Mx[i].resize(3);
+	return Matrix<double>::Allocate(3, 3);
 	}
 
 static inline void MulVecScalar(const vector<double> &v,
@@ -125,7 +126,7 @@ static inline float GetDist3D(
 	return d;
 	}
 
-static inline double GetDist2_Mxij(const vector<vector<double> > &Mx,
+static inline double GetDist2_Mxij(const Matrix<double> &Mx,
   uint i, uint j)
 	{
 	double xi = Mx[i][X];
@@ -144,7 +145,7 @@ static inline double GetDist2_Mxij(const vector<vector<double> > &Mx,
 	return d2;
 	}
 
-static inline double GetDist_Mxij(const vector<vector<double> > &Mx,
+static inline double GetDist_Mxij(const Matrix<double> &Mx,
   uint i, uint j)
 	{
 	double xi = Mx[i][X];
@@ -190,7 +191,7 @@ static inline void NormalizeVec(vector<double> &v)
 	assert(feq(GetMod_Vec(v), 1));
 	}
 
-static inline double GetMod_Mxi(const vector<vector<double> > &Mx,
+static inline double GetMod_Mxi(const Matrix<double> &Mx,
   uint i)
 	{
 	double x = Mx[i][X];
@@ -261,10 +262,16 @@ static inline double GetTheta_Vecs(const vector<double> &vi,
 	return theta;
 	}
 
-static inline double GetTheta_Mxij(const vector<vector<double> > &Mx,
+static inline double GetTheta_Mxij(const Matrix<double> &Mx,
   uint i, uint j)
 	{
-	double theta = GetTheta_Vecs(Mx[i], Mx[j]);
+	vector<double> vi(3), vj(3);
+	for (uint k = 0; k < 3; ++k)
+		{
+		vi[k] = Mx[i][k];
+		vj[k] = Mx[j][k];
+		}
+	double theta = GetTheta_Vecs(vi, vj);
 	return theta;
 	}
 
@@ -280,39 +287,37 @@ static inline double degrees_0_to_360(double Radians)
 	return Deg;
 	}
 
-void GetIdentityMx(vector<vector<double> > &Mx);
+void GetIdentityMx(Matrix<double> &Mx);
 
 void XFormPt(
   const vector<double> &Pt,
   const vector<double> &t,
-  const vector<vector<double> > &R,
+  const Matrix<double> &R,
   vector<double> &XPt);
 
 void XFormMx(
-  const vector<vector<double> > &Mx,
+  const Matrix<double> &Mx,
   const vector<double> &t,
-  const vector<vector<double> > &R,
-  vector<vector<double> > &XMx);
+  const Matrix<double> &R,
+  Matrix<double> &XMx);
 
 void XFormPt(
   const vector<float> &Pt,
   const vector<float> &t,
-  const vector<vector<float> > &R,
+  const Matrix<float> &R,
   vector<float> &XPt);
 
 void XFormMx(
-  const vector<vector<float> > &Mx,
+  const Matrix<float> &Mx,
   const vector<float> &t,
-  const vector<vector<float> > &R,
-  vector<vector<float> > &XMx);
+  const Matrix<float> &R,
+  Matrix<float> &XMx);
 
 #if DEBUG
-static void AssertCanonicalUnitBasis(const vector<vector<double> > &Basis)
+static void AssertCanonicalUnitBasis(const Matrix<double> &Basis)
 	{
-	assert(SIZE(Basis) == 3);
-	assert(SIZE(Basis[0]) == 3);
-	assert(SIZE(Basis[1]) == 3);
-	assert(SIZE(Basis[2]) == 3);
+	assert(Basis.Rows() == 3);
+	assert(Basis.Cols() == 3);
 
 	assert(feq(Basis[0][X], 1));
 	assert(feq(Basis[0][Y], 0));
@@ -330,7 +335,7 @@ static void AssertCanonicalUnitBasis(const vector<vector<double> > &Basis)
 #define AssertCanonicalUnitBasis(x)	0
 #endif // DEBUG
 
-static void AssertUnitBasisA(const vector<vector<double> > &Basis)
+static void AssertUnitBasisA(const Matrix<double> &Basis)
 	{
 // check length of basis vectors is 1 and angles are PI/2
 	for (uint k = 0; k < 3; ++k)
@@ -347,7 +352,7 @@ static void AssertUnitBasisA(const vector<vector<double> > &Basis)
 	}
 
 #if DEBUG
-static void AssertUnitBasis(const vector<vector<double> > &Basis)
+static void AssertUnitBasis(const Matrix<double> &Basis)
 	{
 // check length of basis vectors is 1 and angles are PI/2
 	for (uint k = 0; k < 3; ++k)
@@ -367,8 +372,8 @@ static void AssertUnitBasis(const vector<vector<double> > &Basis)
 #endif // DEBUG
 
 #if DEBUG
-static void AssertSameLengths(const vector<vector<double> > &Mx1,
-  const vector<vector<double> > &Mx2)
+static void AssertSameLengths(const Matrix<double> &Mx1,
+  const Matrix<double> &Mx2)
 	{
 	for (uint k = 0; k < 3; ++k)
 		{
@@ -382,8 +387,8 @@ static void AssertSameLengths(const vector<vector<double> > &Mx1,
 #endif // DEBUG
 
 #if DEBUG
-static void AssertSameAngles(const vector<vector<double> > &Mx1,
-  const vector<vector<double> > &Mx2)
+static void AssertSameAngles(const Matrix<double> &Mx1,
+  const Matrix<double> &Mx2)
 	{
 	for (uint i = 0; i < 3; ++i)
 		{
@@ -400,11 +405,10 @@ static void AssertSameAngles(const vector<vector<double> > &Mx1,
 #endif // DEBUG
 
 #if DEBUG
-static void AssertMx3D(const vector<vector<double> > &Mx)
+static void AssertMx3D(const Matrix<double> &Mx)
 	{
-	asserta(SIZE(Mx) == 3);
-	for (uint i = 0; i < 3; ++i)
-		asserta(SIZE(Mx[i]) == 3);
+	asserta(Mx.Rows() == 3);
+	asserta(Mx.Cols() == 3);
 	}
 #else
 #define AssertMx3D(x)	0
