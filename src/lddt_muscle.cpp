@@ -2,6 +2,7 @@
 #include "seqdb.h"
 #include "pdbchain.h"
 #include "daliscorer.h"
+#include "arrays.h"
 
 double DALIScorer::GetLDDT_muscle() const
 	{
@@ -40,8 +41,8 @@ double DALIScorer::GetLDDTChainPair_muscle(uint ChainIdx1, uint ChainIdx2,
 	if (nr_cols == 0)
 		return 0;
 
-	const vector<vector<double> > &DistMx1 = GetDistMx(ChainIdx1);
-	const vector<vector<double> > &DistMx2 = GetDistMx(ChainIdx2);
+	const Matrix<double> &DistMx1 = GetDistMx(ChainIdx1);
+	const Matrix<double> &DistMx2 = GetDistMx(ChainIdx2);
 
 	const uint nr_thresholds = SIZE(m_LDDT_thresholds);
 	asserta(SIZE(col_to_pos2s) == nr_cols);
@@ -56,8 +57,8 @@ double DALIScorer::GetLDDTChainPair_muscle(uint ChainIdx1, uint ChainIdx2,
 		if (pos1i == UINT_MAX || pos2i == UINT_MAX)
 			continue;
 
-		const vector<double> &DistMxRow1i = DistMx1[pos1i];
-		const vector<double> &DistMxRow2i = DistMx2[pos2i];
+		span<const double> DistMxRow1i = DistMx1[pos1i];
+		span<const double> DistMxRow2i = DistMx2[pos2i];
 
 		++nr_cols_considered;
 		uint nr_considered = 0;

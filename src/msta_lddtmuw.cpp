@@ -28,7 +28,7 @@ static uint GetBin(double LDDTMuW, const vector<double> &Thresholds)
 double DALIScorer::GetLDDTMuWCol(uint Col, uint w) const
 	{
 	const uint SeqCount = GetSeqCount();
-	vector<vector<vector<double> > > MxVec(SeqCount);
+	vector<Matrix<double> > MxVec(SeqCount);
 	for (uint SeqIdx = 0; SeqIdx < SeqCount; ++SeqIdx)
 		{
 		uint Pos = m_ColToPosVec[SeqIdx][Col];
@@ -43,13 +43,13 @@ double DALIScorer::GetLDDTMuWCol(uint Col, uint w) const
 	uint n = 0;
 	for (uint seq_idxi = 0; seq_idxi < nr_seqs; ++seq_idxi)
 		{
-		const vector<vector<double> > &Mxi = MxVec[seq_idxi];
-		if (Mxi.empty())
+		const Matrix<double> &Mxi = MxVec[seq_idxi];
+		if (Mxi.Rows() == 0)
 			continue;
 		for (uint seq_idxj = seq_idxi + 1; seq_idxj < nr_seqs; ++seq_idxj)
 			{
-			const vector<vector<double> > &Mxj = MxVec[seq_idxj];
-			if (Mxj.empty())
+			const Matrix<double> &Mxj = MxVec[seq_idxj];
+			if (Mxj.Rows() == 0)
 				continue;
 			double score = GetLDDTScoreWindow(Mxi, Mxj, w);
 			if (score == DBL_MAX)

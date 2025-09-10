@@ -3,6 +3,7 @@
 #include "chainreader2.h"
 #include "alpha.h"
 #include "daliscorer.h"
+#include "arrays.h"
 
 double DALIScorer::GetDALIScore_ChainPair(uint ChainIdx1, uint ChainIdx2,
   const vector<uint> &Pos1s, vector<uint> &Pos2s) const
@@ -19,16 +20,16 @@ double DALIScorer::GetDALIScore_OffDiag(uint ChainIdx1, uint ChainIdx2,
 	const uint Lali = SIZE(Pos1s);
 	asserta(SIZE(Pos2s) == Lali);
 
-	const vector<vector<double> > &DistMx1 = GetDistMx(ChainIdx1);
-	const vector<vector<double> > &DistMx2 = GetDistMx(ChainIdx2);
+	const Matrix<double> &DistMx1 = GetDistMx(ChainIdx1);
+	const Matrix<double> &DistMx2 = GetDistMx(ChainIdx2);
 
 	double Sum = 0;
 	for (uint i = 0; i < Lali; ++i)
 		{
 		uint Pos1i = Pos1s[i];
 		uint Pos2i = Pos2s[i];
-		const vector<double> &DistMxRow1i = DistMx1[Pos1i];
-		const vector<double> &DistMxRow2i = DistMx2[Pos2i];
+		span<const double> DistMxRow1i = DistMx1[Pos1i];
+		span<const double> DistMxRow2i = DistMx2[Pos2i];
 		for (uint j = 0; j < Lali; ++j)
 			{
 			if (i == j)

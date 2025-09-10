@@ -472,7 +472,7 @@ double DALIScorer::GetSumScore_Cols() const
 	}
 
 
-const vector<vector<double> > &DALIScorer::GetDistMx(uint ChainIdx) const
+const Matrix<double> &DALIScorer::GetDistMx(uint ChainIdx) const
 	{
 	asserta(ChainIdx < SIZE(m_DistMxVec));
 	return m_DistMxVec[ChainIdx];
@@ -481,12 +481,11 @@ const vector<vector<double> > &DALIScorer::GetDistMx(uint ChainIdx) const
 double DALIScorer::GetDist(uint ChainId, uint Pos1, uint Pos2) const
 	{
 	assert(ChainId < SIZE(m_DistMxVec));
-	const vector<vector<double> > &DistMx = m_DistMxVec[ChainId];
-	const uint L = SIZE(DistMx);
+	const Matrix<double> &DistMx = m_DistMxVec[ChainId];
+	const uint L = DistMx.Rows();
 	assert(Pos1 < L);
-	const vector<double> &Row = DistMx[Pos1];
-	assert(Pos2 < SIZE(Row));
-	double d = Row[Pos2];
+	assert(Pos2 < DistMx.Cols());
+	double d = DistMx[Pos1][Pos2];
 	return d;
 	}
 
@@ -496,13 +495,12 @@ void DALIScorer::SetDistMx(uint ChainId)
 	asserta(ChainId < SIZE(m_Chains));
 	const PDBChain &Chain = *m_Chains[ChainId];
 	const uint L = Chain.GetSeqLength();
-	vector<vector<double> > &DistMx = m_DistMxVec[ChainId];
-	DistMx.resize(L);
+	m_DistMxVec[ChainId] = Matrix<double>::Allocate(L, L);
+	Matrix<double> &DistMx = m_DistMxVec[ChainId];
+	
+	// Initialize diagonal with 0
 	for (uint i = 0; i < L; ++i)
-		{
-		DistMx[i].resize(L);
 		DistMx[i][i] = 0;
-		}
 
 	for (uint i = 0; i < L; ++i)
 		{

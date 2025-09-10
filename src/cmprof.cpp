@@ -13,13 +13,15 @@ double GetNormal(double Mu, double Sigma, double x)
 	}
 
 void CMProf::GetDistMx(const PDBChain &Chain, const vector<uint> &PosVec,
-  vector<vector<double> > &DistMx)
+  Matrix<double> &DistMx)
 	{
-	DistMx.clear();
 	const uint N = SIZE(PosVec);
-	DistMx.resize(N);
+	DistMx = Matrix<double>::Allocate(N, N);
+	
+	// Initialize with DBL_MAX
 	for (uint i = 0; i < N; ++i)
-		DistMx[i].resize(N, DBL_MAX);
+		for (uint j = 0; j < N; ++j)
+			DistMx[i][j] = DBL_MAX;
 
 	for (uint i = 0; i < N; ++i)
 		{
@@ -40,13 +42,13 @@ void CMProf::GetDistMx(const PDBChain &Chain, const vector<uint> &PosVec,
 	}
 
 void CMProf::MxToFile(FILE *f, const string &Name,
-  const vector<vector<double> > &Mx) const
+  const Matrix<double> &Mx) const
 	{
 	if (f == 0)
 		return;
 
 	const uint CoreColCount = GetCoreColCount();
-	asserta(SIZE(Mx) == CoreColCount);
+	asserta(Mx.Rows() == CoreColCount);
 	for (uint i = 0; i < CoreColCount; ++i)
 		{
 		fprintf(f, "%s\t%u", Name.c_str(), i);
@@ -80,11 +82,14 @@ void CMProf::ToFile(const string &FileName) const
 	}
 
 void CMProf::MxFromFile(FILE *f, string &Name, uint CoreColCount,
-  vector<vector<double> > &Mx)
+  Matrix<double> &Mx)
 	{
-	Mx.resize(CoreColCount);
+	Mx = Matrix<double>::Allocate(CoreColCount, CoreColCount);
+	
+	// Initialize with DBL_MAX
 	for (uint i = 0; i < CoreColCount; ++i)
-		Mx[i].resize(CoreColCount, DBL_MAX);
+		for (uint j = 0; j < CoreColCount; ++j)
+			Mx[i][j] = DBL_MAX;
 
 	string Line;
 	vector<string> Fields;
@@ -166,10 +171,10 @@ bool CMProf::TrainChain(const PDBChain &Q)
 				PosVec.push_back(Pos++);
 			}
 		}
-	vector<vector<double> > DistMx;
+	Matrix<double> DistMx;
 	GetDistMx(Q, PosVec, DistMx);
 
-	m_DistMxVec.push_back(DistMx);
+	m_DistMxVec.push_back(std::move(DistMx));
 	return true;
 	}
 
@@ -177,16 +182,16 @@ void CMProf::FinalizeTrain()
 	{
 	const uint CoreColCount = GetCoreColCount();
 
-	m_MeanDistMx.clear();
-	m_StdDevs.clear();
-
-	m_MeanDistMx.resize(CoreColCount);
-	m_StdDevs.resize(CoreColCount);
+	m_MeanDistMx = Matrix<double>::Allocate(CoreColCount, CoreColCount);
+	m_StdDevs = Matrix<double>::Allocate(CoreColCount, CoreColCount);
+	
+	// Initialize with DBL_MAX
 	for (uint i = 0; i < CoreColCount; ++i)
-		{
-		m_MeanDistMx[i].resize(CoreColCount, DBL_MAX);
-		m_StdDevs[i].resize(CoreColCount, DBL_MAX);
-		}
+		for (uint j = 0; j < CoreColCount; ++j)
+			{
+			m_MeanDistMx[i][j] = DBL_MAX;
+			m_StdDevs[i][j] = DBL_MAX;
+			}
 
 	for (uint i = 0; i < CoreColCount; ++i)
 		{
@@ -217,8 +222,8 @@ void CMProf::GetMeanStdDev(uint i, uint j,
 	uint n = 0;
 	for (uint k = 0; k < N; ++k)
 		{
-		asserta(i < SIZE(m_DistMxVec[k]));
-		asserta(j < SIZE(m_DistMxVec[k][i]));
+		asserta(i < m_DistMxVec[k].Rows());
+		asserta(j < m_DistMxVec[k].Cols());
 		double d = m_DistMxVec[k][i][j];
 		if (d == DBL_MAX)
 			continue;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "arrays.h"
+
 enum SYMMETRY
 	{
 	SYMM_First,
@@ -23,7 +25,7 @@ public:
 
 	vector<vector<uint> > m_ColToPosVec;
 
-	vector<vector<vector<double> > > m_DistMxVec;
+	vector<Matrix<double> > m_DistMxVec;
 	vector<double> m_LDDT_thresholds;
 	double m_LDDT_R0 = DBL_MAX;
 	SYMMETRY m_LDDT_symm = SYMM_First;
@@ -74,7 +76,7 @@ public:
 	double GetDiagScore() const;
 	double GetDiagScoreSeqPair(uint SeqIdx1, uint SeqIdx2) const;
 	double GetDist(uint ChainId, uint Pos1, uint Pos2) const;
-	const vector<vector<double> > &GetDistMx(uint ChainIdx) const;
+	const Matrix<double> &GetDistMx(uint ChainIdx) const;
 	void SetDistMx(uint ChainId);
 	void SetDistMxs();
 	uint GetChainIdx(const string &Seq, bool FailOnError = true) const;
@@ -93,9 +95,9 @@ public:
 	double GetLDDTMuWCol(uint Col, uint w) const;
 	double GetLDDTMuW1(uint SeqIdx, uint Col, uint w) const;
 	void GetDistMxWindow(uint SeqIdx, uint Col, uint w,
-	  vector<vector<double> > &Mx) const;
-	double GetLDDTScoreWindow(const vector<vector<double> > &Mx1,
-	  const vector<vector<double> > &Mx2, uint w) const;
+	  Matrix<double> &Mx) const;
+	double GetLDDTScoreWindow(const Matrix<double> &Mx1,
+	  const Matrix<double> &Mx2, uint w) const;
 	};
 
 double DALI_dpscorefun(double a, double b);

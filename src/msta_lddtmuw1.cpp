@@ -17,13 +17,13 @@ char GetLDDTMuWSymbol(double LDDTMuW)
 	return '@';
 	}
 
-double DALIScorer::GetLDDTScoreWindow(const vector<vector<double> > &DistMx1,
-  const vector<vector<double> > &DistMx2, uint w) const
+double DALIScorer::GetLDDTScoreWindow(const Matrix<double> &DistMx1,
+  const Matrix<double> &DistMx2, uint w) const
 	{
 	const uint nr_thresholds = SIZE(m_LDDT_thresholds);
 	const uint n = 2*w + 1;
-	asserta(SIZE(DistMx1) == n);
-	asserta(SIZE(DistMx2) == n);
+	asserta(DistMx1.Rows() == n);
+	asserta(DistMx2.Rows() == n);
 
 	double total = 0;
 	uint nr_cols_considered = 0;
@@ -31,8 +31,6 @@ double DALIScorer::GetLDDTScoreWindow(const vector<vector<double> > &DistMx1,
 	for (int ii = -iw; ii <= iw; ++ii)
 		{
 		uint i = uint(ii+iw);
-		const vector<double> &DistMxRow1i = DistMx1[i];
-		const vector<double> &DistMxRow2i = DistMx2[i];
 		for (int jj = i + 2; jj <= iw; ++jj)
 			{
 			uint j = uint(jj+iw);
@@ -40,8 +38,8 @@ double DALIScorer::GetLDDTScoreWindow(const vector<vector<double> > &DistMx1,
 			++nr_cols_considered;
 			uint nr_considered = 0;
 			uint nr_preserved = 0;
-			double d1 = DistMxRow1i[j];
-			double d2 = DistMxRow2i[j];
+			double d1 = DistMx1[i][j];
+			double d2 = DistMx2[i][j];
 			if (d1 == DBL_MAX || d2 == DBL_MAX)
 				continue;
 
@@ -70,17 +68,20 @@ double DALIScorer::GetLDDTScoreWindow(const vector<vector<double> > &DistMx1,
 	}
 
 void DALIScorer::GetDistMxWindow(uint SeqIdx, uint Pos, uint w,
-  vector<vector<double> > &Mx) const
+  Matrix<double> &Mx) const
 	{
 	asserta(SeqIdx < SIZE(m_SeqIdxToChainIdx));
 	uint ChainId = m_SeqIdxToChainIdx[SeqIdx];
-	const vector<vector<double> > &DistMx = m_DistMxVec[ChainId];
-	const uint L = SIZE(DistMx);
+	const Matrix<double> &DistMx = m_DistMxVec[ChainId];
+	const uint L = DistMx.Rows();
 
 	uint n = 2*w + 1;
-	Mx.resize(n);
+	Mx = Matrix<double>::Allocate(n, n);
+	
+	// Initialize with DBL_MAX
 	for (uint i = 0; i < n; ++i)
-		Mx[i].resize(n, DBL_MAX);
+		for (uint j = 0; j < n; ++j)
+			Mx[i][j] = DBL_MAX;
 
 	for (uint i = 0; i < n; ++i)
 		{
@@ -107,7 +108,7 @@ double DALIScorer::GetLDDTMuW1(uint QuerySeqIdx, uint Col, uint w) const
 	asserta(QuerySeqIdx < SIZE(m_ColToPosVec));
 	asserta(Col < SIZE(m_ColToPosVec[QuerySeqIdx]));
 	uint QueryPos = m_ColToPosVec[QuerySeqIdx][Col];
-	vector<vector<double> > QueryMx;
+	Matrix<double> QueryMx;
 	GetDistMxWindow(QuerySeqIdx, QueryPos, w, QueryMx);
 	asserta(QuerySeqIdx < SIZE(m_SeqIdxToChainIdx));
 	uint QueryChainIdx = m_SeqIdxToChainIdx[QuerySeqIdx];
@@ -124,7 +125,7 @@ double DALIScorer::GetLDDTMuW1(uint QuerySeqIdx, uint Col, uint w) const
 		if (posi == UINT_MAX)
 			continue;
 
-		vector<vector<double> > Mx;
+		Matrix<double> Mx;
 		GetDistMxWindow(seq_idxi, posi, w, Mx);
 		double score = GetLDDTScoreWindow(QueryMx, Mx, w);
 		if (score == DBL_MAX)
