@@ -5,6 +5,7 @@
 #include "features.h"
 #include "dssparams.h"
 #include "xdpmem.h"
+#include "arrays.h"
 
 const uint WILDCARD = 0;
 
@@ -85,7 +86,7 @@ public:
 #include "floatfeatures.h"
 #undef F
 
-	void GetProfile(vector<vector<byte> > &Profile);
+	Matrix<byte> GetProfile();
 	void GetMuLetters(vector<byte> &Letters);
 	void GetAaLetters(vector<byte> &Letters);
 	void GetMuKmers(const vector<byte> &MuLetters,

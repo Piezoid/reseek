@@ -3,6 +3,7 @@
 #include "dbsearcher.h"
 #include "dssaligner.h"
 #include "xdpmem.h"
+#include "arrays.h"
 #include <map>
 #include <mutex>
 
@@ -97,7 +98,7 @@ public:
 	void BuildDomSFIndexesFromDBChainLabels();
 	uint GetDomIdx(const string &Dom_or_DomSlashId, bool FailOnErr = true) const;
 	const PDBChain &GetChainByDomIdx(uint DomIdx) const;
-	const vector<vector<byte> > &GetProfileByDomIdx(uint DomIdx) const;
+	const Matrix<byte> &GetProfileByDomIdx(uint DomIdx) const;
 
 	void ScanDomHits();
 	void SetDomIdxToHitIdxs();

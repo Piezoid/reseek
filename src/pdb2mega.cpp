@@ -2,6 +2,7 @@
 #include "chainreader2.h"
 #include "dss.h"
 #include "alpha.h"
+#include "arrays.h"
 
 static void ReverseChains(vector<PDBChain *> &Chains)
 	{
@@ -87,7 +88,6 @@ void cmd_pdb2mega()
 
 	DSS D;
 	D.SetParams(Params);
-	vector<vector<byte> > Profile;
 	for (uint ChainIndex = 0; ChainIndex < ChainCount; ++ChainIndex)
 		{
 		PDBChain &Chain = *Chains[ChainIndex];
@@ -97,10 +97,10 @@ void cmd_pdb2mega()
 		fprintf(fOut, "chain\t%u\t%s\t%u\n", ChainIndex, Label, L);
 
 		D.Init(Chain);
-		D.GetProfile(Profile);
-		asserta(SIZE(Profile) == FeatureCount);
+		Matrix<byte> Profile = D.GetProfile();
+		asserta(Profile.Rows() == FeatureCount);
 		for (uint FeatureIdx = 0; FeatureIdx < FeatureCount; ++FeatureIdx)
-			asserta(SIZE(Profile[FeatureIdx]) == L);
+			asserta(Profile.Cols() == L);
 		for (uint Pos = 0; Pos < L; ++Pos)
 			{
 			string s;

@@ -1,6 +1,7 @@
 #include "myutils.h"
 #include "dssaligner.h"
 #include "chainreader2.h"
+#include "arrays.h"
 
 /***
 [c300a5f] Add bags to postmufilter but not used, 
@@ -12,7 +13,7 @@
 ***/
 
 float GetSelfRevScore(DSSAligner &DA, DSS &D, const PDBChain &Chain,
-					  const vector<vector<byte> > &Profile,
+					  const Matrix<byte> &Profile,
 					  const vector<byte> *ptrMuLetters,
 					  const vector<uint> *ptrMuKmers);
 
@@ -68,11 +69,11 @@ static void ThreadBody_IndexQuery(uint ThreadIndex)
 		const PDBChain &QChain = *QChains[QueryIdx];
 		D.Init(QChain);
 
-		vector<vector<byte> > *ptrQProfile = new vector<vector<byte> >;
+		Matrix<byte> *ptrQProfile = new Matrix<byte>;
 		vector<byte> *ptrQMuLetters = new vector<byte>;
 		vector<uint> *ptrQMuKmers = new vector<uint>;
 
-		D.GetProfile(*ptrQProfile);
+		*ptrQProfile = D.GetProfile();
 		D.GetMuLetters(*ptrQMuLetters);
 		D.GetMuKmers(*ptrQMuLetters, *ptrQMuKmers, Params.m_MKFPatternStr);
 		float QSelfRevScore = 
@@ -125,7 +126,6 @@ static void ThreadBody_Scan(uint ThreadIndex)
 	vector<ChainBag *> &ChainBagsQ = *s_ptrChainBagsQ;
 	vector<PDBChain *> &QChains = *s_ptrQChains;
 	const BCAData &DB = *s_ptrDB;
-	vector<vector<byte> > DBProfile;
 	vector<byte> DBMuLetters;
 	vector<uint> DBMuKmers;
 	float SelfRevScore = 0;
@@ -164,7 +164,7 @@ static void ThreadBody_Scan(uint ThreadIndex)
 		DB.ReadChain(TargetIdx, DBChain);
 
 		D.Init(DBChain);
-		D.GetProfile(DBProfile);
+		Matrix<byte> DBProfile = D.GetProfile();
 		D.GetMuLetters(DBMuLetters);
 		D.GetMuKmers(DBMuLetters, DBMuKmers, Params.m_MKFPatternStr);
 

@@ -7,6 +7,7 @@
 #include "alpha.h"
 #include "diaghsp.h"
 #include "diag.h"
+#include <algorithm>
 
 #define LOGDIAGALNS	0
 
@@ -372,6 +373,15 @@ void TwoHitDiag::SetDupesRdx(uint Rdx)
 		return;
 	Duper &D = *new Duper(Size);
 	AddItems(D, Rdx);
+	
+	// Sort D.m_Dupes by Diag values to ensure m_DupeDiags is monotonically increasing
+	std::sort(D.m_Dupes, D.m_Dupes + D.m_DupeCount, [this, Rdx](uint32_t Item1, uint32_t Item2) {
+		uint16_t Diag1, Diag2;
+		CvtItem(Rdx, Item1, Diag1);
+		CvtItem(Rdx, Item2, Diag2);
+		return Diag1 < Diag2;
+	});
+	
 	for (uint j = 0; j < D.m_DupeCount; ++j)
 		{
 		uint32_t Item = D.m_Dupes[j];

@@ -9,6 +9,7 @@
 #include "diag.h"
 #include "rankedscoresbag.h"
 #include "prefiltermuparams.h"
+#include "arrays.h"
 
 const MerMx &GetMuMerMx(uint k);
 
@@ -59,6 +60,12 @@ public:
 //  the high-scoring neighborhood of a k-mer
 ////////////////////////////////////////////
 	const MerMx *m_ScoreMx = 0;
+
+////////////////////////////////////////////
+//  Local copy of the substitution matrix
+//  for thread-safe access
+////////////////////////////////////////////
+	Matrix<int8_t> m_SubstMatrix;
 
 ///////////////////////////////////////////////////
 // Accumulating results for current target sequence

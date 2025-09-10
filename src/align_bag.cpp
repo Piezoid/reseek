@@ -1,9 +1,10 @@
 #include "myutils.h"
 #include "dssaligner.h"
 #include "statsig.h"
+#include "arrays.h"
 
 extern float GetSelfRevScore(DSSAligner &DA, DSS &D, const PDBChain &Chain,
-					  const vector<vector<byte> > &Profile,
+					  const Matrix<byte> &Profile,
 					  const vector<byte> *ptrMuLetters,
 					  const vector<uint> *ptrMuKmers);
 
@@ -17,11 +18,11 @@ static ChainBag *MakeBag(
 	{
 	D.Init(QChain);
 
-	vector<vector<byte> > *ptrQProfile = new vector<vector<byte> >;
+	Matrix<byte> *ptrQProfile = new Matrix<byte>;
 	vector<byte> *ptrQMuLetters = new vector<byte>;
 	vector<uint> *ptrQMuKmers = new vector<uint>;
 
-	D.GetProfile(*ptrQProfile);
+	*ptrQProfile = D.GetProfile();
 	D.GetMuLetters(*ptrQMuLetters);
 	D.GetMuKmers(*ptrQMuLetters, *ptrQMuKmers, Params.m_MKFPatternStr);
 
@@ -130,9 +131,8 @@ void cmd_align_bags()
 		const PDBChain &ChainA = *Chains[ChainIndexA];
 		ChainBag &BagA = *MakeBag(Params, MKF, DA_selfrev, D, ChainA);
 
-		vector<vector<byte> > ProfileA;
 		D.Init(ChainA);
-		D.GetProfile(ProfileA);
+		Matrix<byte> ProfileA = D.GetProfile();
 		float SelfRevScoreA = GetSelfRevScore(DA_selfrev, D, ChainA, ProfileA, 0, 0);
 		DA_sw.SetQuery(ChainA, &ProfileA, 0, 0, SelfRevScoreA);
 
@@ -146,9 +146,8 @@ void cmd_align_bags()
 			if (LA < 400 || LB < 400)
 				continue;
 
-			vector<vector<byte> > ProfileB;
 			D.Init(ChainB);
-			D.GetProfile(ProfileB);
+			Matrix<byte> ProfileB = D.GetProfile();
 			float SelfRevScoreB = GetSelfRevScore(DA_selfrev, D, ChainB, ProfileB, 0, 0);
 
 			DA_sw.SetTarget(ChainB, &ProfileB, 0, 0, SelfRevScoreB);

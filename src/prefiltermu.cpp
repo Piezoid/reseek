@@ -34,7 +34,7 @@ int PrefilterMu::FindHSP(uint QSeqIdx, int Diag) const
 		byte t = m_TSeq[j++];
 		assert(q < ALPHABET_SIZE);
 		assert(t < ALPHABET_SIZE);
-		short Score = Mu_S_ij_i8[q][t];
+		short Score = m_SubstMatrix[q][t];
 		F += Score;
 #if TRACE
 		if (DoTrace(QSeqIdx)) Log(" i=%u j=%u F=%d B=%d score=%d\n", i, j, F, B, Score);
@@ -76,7 +76,7 @@ int PrefilterMu::FindHSP2(uint QSeqIdx,
 		byte t = m_TSeq[j++];
 		assert(q < ALPHABET_SIZE);
 		assert(t < ALPHABET_SIZE);
-		short Score = Mu_S_ij_i8[q][t];
+		short Score = m_SubstMatrix[q][t];
 		F += Score;
 		if (F > B)
 			{
@@ -304,6 +304,16 @@ int PrefilterMu::ExtendTwoHitDiagToHSP(uint32_t QSeqIdx, uint16_t Diag)
 
 void PrefilterMu::Reset()
 	{
+	// Initialize substitution matrix from global array
+	if (m_SubstMatrix.Rows() == 0) {
+		m_SubstMatrix = Matrix<int8_t>::Allocate(36, 36);
+		for (uint i = 0; i < 36; ++i) {
+			for (uint j = 0; j < 36; ++j) {
+				m_SubstMatrix[i][j] = Mu_S_ij_i8[i][j];
+			}
+		}
+	}
+
 	for (uint HitIdx = 0; HitIdx < m_NrQueriesWithTwoHitDiag; ++HitIdx)
 		{
 		uint QSeqIdx = m_QSeqIdxsWithTwoHitDiag[HitIdx];

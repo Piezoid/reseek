@@ -1,11 +1,12 @@
 #include "myutils.h"
 #include "dbsearcher.h"
+#include "arrays.h"
 #include "chainreader2.h"
 #include "timing.h"
 #include "mx.h"
 
 float GetSelfRevScore(DSSAligner &DA, DSS &D, const PDBChain &Chain,
-					  const vector<vector<byte> > &Profile,
+					  const Matrix<byte> &Profile,
 					  const vector<byte> *ptrMuLetters,
 					  const vector<uint> *ptrMuKmers);
 
@@ -21,7 +22,6 @@ void DBSearcher::ThreadBodyQuery(uint ThreadIndex, ChainReader2 *ptrQueryCR)
 	DSSAligner &DA = *m_DAs[ThreadIndex];
 	const uint DBChainCount = GetDBChainCount();
 
-	vector<vector<byte> > Profile1;
 	vector<byte> MuLetters1;
 	vector<uint> MuKmers1;
 
@@ -34,7 +34,7 @@ void DBSearcher::ThreadBodyQuery(uint ThreadIndex, ChainReader2 *ptrQueryCR)
 		if (Chain1 == 0)
 			return;
 		D.Init(*Chain1);
-		D.GetProfile(Profile1);
+		Matrix<byte> Profile1 = D.GetProfile();
 		D.GetMuLetters(MuLetters1);
 		D.GetMuKmers(MuLetters1, MuKmers1, m_Params->m_MKFPatternStr);
 
@@ -63,7 +63,7 @@ void DBSearcher::ThreadBodyQuery(uint ThreadIndex, ChainReader2 *ptrQueryCR)
 			const PDBChain &Chain2 = *m_DBChains[DBChainIdx];
 			if (opt(noself) && Chain1->m_Label == Chain2.m_Label)
 				continue;
-			const vector<vector<byte> > *ptrProfile2 = m_DBProfiles[DBChainIdx];
+			const Matrix<byte> *ptrProfile2 = m_DBProfiles[DBChainIdx];
 			const vector<byte> *ptrMuLetters2 = (m_DBMuLettersVec.empty() ? 0 : m_DBMuLettersVec[DBChainIdx]);
 			const vector<uint> *ptrMuKmers2 = (m_DBMuLettersVec.empty() ? 0 : m_DBMuKmersVec[DBChainIdx]);
 			float SelfRevScore = (m_DBSelfRevScores.empty() ? FLT_MAX : m_DBSelfRevScores[DBChainIdx]);

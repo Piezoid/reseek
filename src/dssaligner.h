@@ -6,6 +6,7 @@
 #include "mx.h"
 #include "userfields.h"
 #include "mukmerfilter.h"
+#include "arrays.h"
 #include <mutex>
 
 #define SCORE_DIST	0
@@ -23,8 +24,8 @@ private:
 public:
 	const PDBChain *m_ChainA = 0;
 	const PDBChain *m_ChainB = 0;
-	const vector<vector<byte> > *m_ProfileA = 0;
-	const vector<vector<byte> > *m_ProfileB = 0;
+	const Matrix<byte> *m_ProfileA = 0;
+	const Matrix<byte> *m_ProfileB = 0;
 	const vector<byte> *m_MuLettersA = 0;
 	const vector<byte> *m_MuLettersB = 0;
 	const vector<uint> *m_MuKmersA = 0;
@@ -108,13 +109,13 @@ public:
 	void UnsetQuery();
 	void SetQuery(
 	  const PDBChain &Chain,
-	  const vector<vector<byte> > *ptrProfile,
+	  const Matrix<byte> *ptrProfile,
 	  const vector<byte> *ptrMuLetters,
 	  const vector<uint> *ptrMuKmers,
 	  float SelfRevScore);
 	void SetTarget(
 	  const PDBChain &Chain,
-	  const vector<vector<byte> > *ptrProfile,
+	  const Matrix<byte> *ptrProfile,
 	  const vector<byte> *ptrMuLetters,
 	  const vector<uint> *ptrMuKmers,
 	  float SelfRevScore);
@@ -129,12 +130,12 @@ public:
 	void Align_Test(
 	  const PDBChain &ChainA, const PDBChain &ChainB,
 	  const vector<byte> &MuLettersA, const vector<byte> &MuLettersB,
-	  const vector<vector<byte> > &ProfileA, const vector<vector<byte> > &ProfileB);
+	  const Matrix<byte> &ProfileA, const Matrix<byte> &ProfileB);
 	void Align_MuFilter(
 	  const PDBChain &ChainA, const PDBChain &ChainB,
 	  const vector<byte> &MuLettersA, const vector<uint> &MuKmersA,
 	  const vector<byte> &MuLettersB,const vector<uint> &MuKmersB,
-	  const vector<vector<byte> > &ProfileA, const vector<vector<byte> > &ProfileB);
+	  const Matrix<byte> &ProfileA, const Matrix<byte> &ProfileB);
 	void AlignMKF();
 	void PostAlignMKF();
 	float GetMegaHSPScore(uint Lo_i, uint Lo_j, uint Len);
@@ -146,8 +147,8 @@ public:
 	float AlignMuParaBags(const ChainBag &BagA, const ChainBag &BagB);
 	float AlignMuQP_Para_Path(uint &LoA, uint &LoB, string &Path);
 	float AlignMu_Int(const vector<byte> &LettersA, const vector<byte> &LettersB);
-	float GetDPScorePath(const vector<vector<byte> > &ProfileA,
-	  const vector<vector<byte> > &ProfileB, uint LoA, uint LoB,
+	float GetDPScorePath(const Matrix<byte> &ProfileA,
+	  const Matrix<byte> &ProfileB, uint LoA, uint LoB,
 	  const string &Path) const;
 	float GetMuDPScorePath(const vector<byte> &LettersA,
 	  const vector<byte> &LettersB, uint LoA, uint LoB,
@@ -155,18 +156,18 @@ public:
 	int GetMuDPScorePathInt(const vector<byte> &MuLettersA,
 	  const vector<byte> &MuLettersB, uint LoA, uint LoB,
 	  const string &Path) const;
-	float GetScorePosPair(const vector<vector<byte> > &ProfileA,
-	  const vector<vector<byte> > &ProfileB, uint PosA, uint PosB) const;
-	float GetScoreSegPair(const vector<vector<byte> > &ProfileA,
-	  const vector<vector<byte> > &ProfileB, uint PosA, uint PosB, uint n) const;
+	float GetScorePosPair(const Matrix<byte> &ProfileA,
+	  const Matrix<byte> &ProfileB, uint PosA, uint PosB) const;
+	float GetScoreSegPair(const Matrix<byte> &ProfileA,
+	  const Matrix<byte> &ProfileB, uint PosA, uint PosB, uint n) const;
 	uint GetU(const vector<uint> &Kmers1, const vector<uint> &Kmers2) const;
 	void GetPosABs(vector<uint> &PosAs, vector<uint> &PosBs) const;
 	void CalcEvalue();
 	void CalcEvalue_AAOnly();
 	void SetSMx_QRev();
 	void SetSMx_NoRev(const DSSParams &Params,
-					  const vector<vector<byte> > &ProfileA,
-					  const vector<vector<byte> > &ProfileB);
+					  const Matrix<byte> &ProfileA,
+					  const Matrix<byte> &ProfileB);
 	void SetMuQP();
 	void SetMuQPi();
 	void SetMuQP_Para();
@@ -183,7 +184,7 @@ public:
 	void ToFasta2(FILE *f, bool Global, bool Up) const;
 	void ToAln(FILE *f, bool Up) const;
 	void PrettyAln(FILE *f, const PDBChain &A, const PDBChain &B,
-	  const vector<vector<byte> > &ProfileA, const vector<vector<byte> > &ProfileB,
+	  const Matrix<byte> &ProfileA, const Matrix<byte> &ProfileB,
 	  uint LoA, uint LoB, const string &Path, float Quality, float Evalue) const;
 	void WriteUserField(FILE *f, USERFIELD UF, bool Up) const;
 

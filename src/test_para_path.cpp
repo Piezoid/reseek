@@ -84,16 +84,13 @@ static void OnPair(const Trainer &Tr, uint ChainIdxQ, uint ChainIdxR,
 	vector<byte> MuLettersQ;
 	vector<byte> MuLettersR;
 
-	vector<vector<byte> > ProfileQ;
-	vector<vector<byte> > ProfileR;
-
 	D.Init(ChainQ);
 	D.GetMuLetters(MuLettersQ);
-	D.GetProfile(ProfileQ);
+	Matrix<byte> ProfileQ = D.GetProfile();
 
 	D.Init(ChainR);
 	D.GetMuLetters(MuLettersR);
-	D.GetProfile(ProfileR);
+	Matrix<byte> ProfileR = D.GetProfile();
 
 	DA.Align_Test(ChainQ, ChainR, MuLettersQ, MuLettersR,
 	  ProfileQ, ProfileR);
@@ -101,8 +98,8 @@ static void OnPair(const Trainer &Tr, uint ChainIdxQ, uint ChainIdxR,
 
 static uint g_LA;
 static uint g_LB;
-static const vector<vector<byte> > *g_ProfileA;
-static const vector<vector<byte> > *g_ProfileB;
+static const Matrix<byte> *g_ProfileA;
+static const Matrix<byte> *g_ProfileB;
 static DSSAligner *g_DA;
 static float SubFn(void *UserData, uint PosA, uint PosB)
 	{
@@ -113,7 +110,7 @@ static float SubFn(void *UserData, uint PosA, uint PosB)
 void DSSAligner::Align_Test(
   const PDBChain &ChainA, const PDBChain &ChainB,
   const vector<byte> &MuLettersA, const vector<byte> &MuLettersB,
-  const vector<vector<byte> > &ProfileA, const vector<vector<byte> > &ProfileB)
+  const Matrix<byte> &ProfileA, const Matrix<byte> &ProfileB)
 	{
 	SetQuery(ChainA, &ProfileA, &MuLettersA, 0, FLT_MAX);
 	SetTarget(ChainB, &ProfileB, &MuLettersB, 0, FLT_MAX);

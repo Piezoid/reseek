@@ -1,5 +1,7 @@
 #pragma once
 
+#include "arrays.h"
+
 class ChainReader2;
 class PDBChain;
 class DSSParams;
@@ -11,7 +13,7 @@ public:
 	const DSSParams *m_Params = 0;
 	ChainReader2 *m_CR = 0;
 	vector<PDBChain *> *m_Chains = 0;
-	vector<vector<vector<byte> > *> *m_Profiles = 0;
+	vector<Matrix<byte>*> *m_Profiles = 0;
 	vector<vector<byte> *> *m_MuLetters = 0;
 	vector<vector<uint> *> *m_KmersVec = 0;
 	vector<float> *m_SelfRevScores = 0;
@@ -25,7 +27,7 @@ public:
 	  const DSSParams &Params,
 	  ChainReader2 &CR,
 	  vector<PDBChain *> *Chains,
-	  vector<vector<vector<byte> > *> *Profiles,
+	  vector<Matrix<byte>*> *Profiles,
 	  vector<vector<byte> *> *MuLetters,
 	  vector<vector<uint> *> *KmersVec,
 	  vector<float> *SelfRevScores,

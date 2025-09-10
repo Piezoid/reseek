@@ -55,7 +55,7 @@ void DBSearcher::RunStats() const
 	Log("QP cache hits %u, misses %u\n", Hits, Misses);
 	}
 
-void DBSearcher::AddChain(PDBChain *ptrChain, vector<vector<byte> > *ptrProfile,
+void DBSearcher::AddChain(PDBChain *ptrChain, Matrix<byte> *ptrProfile,
   vector<byte> *ptrMuLetters)
 	{
 	m_DBChains.push_back(ptrChain);

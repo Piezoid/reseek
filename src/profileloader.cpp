@@ -3,9 +3,10 @@
 #include "dss.h"
 #include "dssaligner.h"
 #include "profileloader.h"
+#include "arrays.h"
 
 float GetSelfRevScore(DSSAligner &DA, DSS &D, const PDBChain &Chain,
-					  const vector<vector<byte> > &Profile,
+					  const Matrix<byte> &Profile,
 					  const vector<byte> *ptrMuLetters,
 					  const vector<uint> *ptrMuKmers);
 
@@ -47,13 +48,13 @@ void ProfileLoader::ThreadBody(uint ThreadIndex)
 			}
 		m_Lock.unlock();
 
-		vector<vector<byte> > *ptrProfile = m_Profiles == 0 ? 0 : new vector<vector<byte> >;
+		Matrix<byte> *ptrProfile = m_Profiles == 0 ? 0 : new Matrix<byte>;
 		vector<byte> *MuLetters = m_MuLetters == 0 ? 0 : new vector<byte>;
 		vector<uint> *MuKmers = m_MuLetters == 0 ? 0 : new vector<uint>;
 		float SelfRevScore = FLT_MAX;
 
 		D.Init(*Chain);
-		if (m_Profiles != 0) D.GetProfile(*ptrProfile);
+		if (m_Profiles != 0) *ptrProfile = D.GetProfile();
 		if (m_MuLetters != 0) D.GetMuLetters(*MuLetters);
 		if (m_MuLetters != 0) D.GetMuKmers(*MuLetters, *MuKmers, m_Params->m_MKFPatternStr);
 		if (m_SelfRevScores != 0) SelfRevScore =
@@ -74,7 +75,7 @@ void ProfileLoader::Load(
   const DSSParams &Params,
   ChainReader2 &CR,
   vector<PDBChain *> *Chains,
-  vector<vector<vector<byte> > *> *Profiles,
+  vector<Matrix<byte>*> *Profiles,
   vector<vector<byte> *> *MuLetters,
   vector<vector<uint> *> *KmersVec,
   vector<float> *SelfRevScores,

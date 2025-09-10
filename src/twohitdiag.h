@@ -87,6 +87,10 @@ public:
 
 	uint32_t GetRdx(uint32_t SeqIdx, uint16_t Diag) const
 		{
+		if (Diag > m_Mask14)
+			{
+			Log("Diag %u > m_Mask14 %u", Diag, m_Mask14);
+			}
 		asserta(Diag <= m_Mask14);
 
 		uint32_t SeqIdxLoBits = SeqIdx%m_SeqMod;

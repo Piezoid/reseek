@@ -3,6 +3,7 @@
 #include "abcxyz.h"
 #include "alpha.h"
 #include "dss.h"
+#include "arrays.h"
 
 uint GetPatternOnes(const string &Str)
 	{
@@ -439,25 +440,26 @@ uint DSS::CalcNEN(uint Pos) const
 	return MinPos;
 	}
 
-uint DSS::GetNEN(uint Pos)
+__attribute__((noinline)) uint DSS::GetNEN(uint Pos)
 	{
 	SetNENs();
 	asserta(Pos < SIZE(m_NENs));
 	return m_NENs[Pos];
 	}
 
-uint DSS::GetREN(uint Pos)
+__attribute__((noinline)) uint DSS::GetREN(uint Pos)
 	{
 	SetNENs();
 	asserta(Pos < SIZE(m_RENs));
 	return m_RENs[Pos];
 	}
 
-void DSS::SetNENs()
+__attribute__((noinline))  void DSS::SetNENs()
 	{
 	if (!m_NENs.empty())
 		return;
 	const uint L = GetSeqLength();
+	asserta(L > 0);
 	m_NENs.reserve(L);
 	m_RENs.reserve(L);
 	for (uint Pos = 0; Pos < L; ++Pos)
@@ -469,7 +471,7 @@ void DSS::SetNENs()
 		}
 	}
 
-uint DSS::Get_NENSS(uint Pos)
+__attribute__((noinline))  uint DSS::Get_NENSS(uint Pos)
 	{
 	SetSS();
 	SetNENs();
@@ -481,7 +483,7 @@ uint DSS::Get_NENSS(uint Pos)
 	return SSCharToInt(c);
 	}
 
-uint DSS::Get_RENSS(uint Pos)
+__attribute__((noinline))  uint DSS::Get_RENSS(uint Pos)
 	{
 	SetSS();
 	SetNENs();
@@ -713,31 +715,31 @@ void DSS::GetMuLetters(vector<byte> &Letters)
 		}
 	}
 
-void DSS::GetProfile(vector<vector<byte> > &Profile)
+Matrix<byte> DSS::GetProfile()
 	{
-	Profile.clear();
 	const uint L = GetSeqLength();
 	const string &Seq = m_Chain->m_Seq;
 	const uint FeatureCount = m_Params->GetFeatureCount();
-	Profile.reserve(FeatureCount);
+	
+	Matrix<byte> Profile = Matrix<byte>::Allocate(FeatureCount, L);
+	
 	for (uint i = 0; i < FeatureCount; ++i)
 		{
-		vector<byte> ProfRow;
-		ProfRow.reserve(L);
 		FEATURE Feature = m_Params->m_Features[i];
 		for (uint Pos = 0; Pos < L; ++Pos)
 			{
 			uint Letter = GetFeature(Feature, Pos);
 			if (Letter == UINT_MAX)
-				ProfRow.push_back(31);
+				Profile[i][Pos] = 31;
 			else
 				{
 				asserta(Letter < 31);
-				ProfRow.push_back(byte(Letter));
+				Profile[i][Pos] = byte(Letter);
 				}
 			}
-		Profile.push_back(ProfRow);
 		}
+	
+	return Profile;
 	}
 
 double DSS::GetFloatFeature(uint FeatureIndex, uint Pos)

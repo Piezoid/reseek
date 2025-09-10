@@ -1,5 +1,6 @@
 #include "myutils.h"
 #include "dssaligner.h"
+#include "arrays.h"
 
 #if TRACE_XDROP
 void LogAln(const char *A, const char *B, const char *Path, unsigned ColCount);
@@ -8,19 +9,19 @@ void LogAln(const char *A, const char *B, const char *Path, unsigned ColCount);
 float DSSAligner::SubstScore(uint PosA, uint PosB)
 	{
 	const DSSParams &Params = *m_Params;
-	const vector<vector<byte> > &ProfileA = *m_ProfileA;
-	const vector<vector<byte> > &ProfileB = *m_ProfileB;
+	const Matrix<byte> &ProfileA = *m_ProfileA;
+	const Matrix<byte> &ProfileB = *m_ProfileB;
 	const uint FeatureCount = Params.GetFeatureCount();
-	assert(SIZE(ProfileA) == FeatureCount);
-	assert(SIZE(ProfileB) == FeatureCount);
+	assert(ProfileA.Rows() == FeatureCount);
+	assert(ProfileB.Rows() == FeatureCount);
 	float Total = 0;
 	for (uint FeatureIdx = 0; FeatureIdx < FeatureCount; ++FeatureIdx)
 		{
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
 		float **ScoreMx = m_Params->m_ScoreMxs[F];
-		const vector<byte> &ProfRowA = ProfileA[FeatureIdx];
-		const vector<byte> &ProfRowB = ProfileB[FeatureIdx];
+		const span<const byte> ProfRowA = ProfileA[FeatureIdx];
+		const span<const byte> ProfRowB = ProfileB[FeatureIdx];
 		byte ia = ProfRowA[PosA];
 		assert(ia < AlphaSize);
 		const float *ScoreMxRow = ScoreMx[ia];

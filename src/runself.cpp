@@ -1,5 +1,6 @@
 #include "myutils.h"
 #include "dbsearcher.h"
+#include "arrays.h"
 #include "scop40bench.h"
 #include "binner.h"
 #include "statsig.h"
@@ -29,7 +30,7 @@ void DBSearcher::ThreadBodySelf(uint ThreadIndex)
 			{
 			++m_QPCacheMisses;
 			const PDBChain &Chain1 = *m_DBChains[ChainIndex1];
-			const vector<vector<byte> > *ptrProfile1 = m_DBProfiles[ChainIndex1];
+			const Matrix<byte> *ptrProfile1 = m_DBProfiles[ChainIndex1];
 			const vector<byte> *ptrMuLetters1 = (m_DBMuLettersVec.empty() ? 0 : m_DBMuLettersVec[ChainIndex1]);
 			const vector<uint> *ptrMuKmers1 = (m_DBMuKmersVec.empty() ? 0 : m_DBMuKmersVec[ChainIndex1]);
 			float SelfRevScore1 = HasSelfRevScores ? m_DBSelfRevScores[ChainIndex1] : FLT_MAX;
@@ -40,7 +41,7 @@ void DBSearcher::ThreadBodySelf(uint ThreadIndex)
 			continue;
 
 		const PDBChain &Chain2 = *m_DBChains[ChainIndex2];
-		const vector<vector<byte> > *ptrProfile2 = m_DBProfiles[ChainIndex2];
+		const Matrix<byte> *ptrProfile2 = m_DBProfiles[ChainIndex2];
 		const vector<byte> *ptrMuLetters2 = (m_DBMuLettersVec.empty() ? 0 : m_DBMuLettersVec[ChainIndex2]);
 		const vector<uint> *ptrMuKmers2 = (m_DBMuKmersVec.empty() ? 0 : m_DBMuKmersVec[ChainIndex2]);
 		float SelfRevScore2 = HasSelfRevScores ? m_DBSelfRevScores[ChainIndex2] : FLT_MAX;

@@ -1,12 +1,14 @@
 #pragma once
 
+#include "arrays.h"
+
 class PDBChain;
 
 class ChainBag
 	{
 public:
 	const PDBChain *m_ptrChain = 0;
-	const vector<vector<byte> > *m_ptrProfile = 0;
+	const Matrix<byte> *m_ptrProfile = 0;
 	const vector<byte> *m_ptrMuLetters = 0;
 	const vector<uint> *m_ptrMuKmers = 0;
 	const void *m_ptrProfPara = 0;

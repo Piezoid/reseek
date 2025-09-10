@@ -245,8 +245,8 @@ float DSSAligner::GetMuDPScorePath(const vector<byte> &LettersA,
 	}
 
 // GetDPScorePath calculates AlnScore which is optimized by SWFast.
-float DSSAligner::GetDPScorePath(const vector<vector<byte> > &ProfileA,
-  const vector<vector<byte> > &ProfileB, uint LoA, uint LoB,
+float DSSAligner::GetDPScorePath(const Matrix<byte> &ProfileA,
+  const Matrix<byte> &ProfileB, uint LoA, uint LoB,
   const string &Path) const
 	{
 	float Sum = 0;
@@ -317,25 +317,25 @@ float DSSAligner::GetDPScorePath(const vector<vector<byte> > &ProfileA,
 	return Sum;
 	}
 
-float DSSAligner::GetScorePosPair(const vector<vector<byte> > &ProfileA,
-  const vector<vector<byte> > &ProfileB, uint PosA, uint PosB) const
+float DSSAligner::GetScorePosPair(const Matrix<byte> &ProfileA,
+  const Matrix<byte> &ProfileB, uint PosA, uint PosB) const
 	{
 	const DSSParams &Params = *m_Params;
 	const uint FeatureCount = Params.GetFeatureCount();
-	asserta(SIZE(ProfileA) == FeatureCount);
-	asserta(SIZE(ProfileB) == FeatureCount);
+	asserta(ProfileA.Rows() == FeatureCount);
+	asserta(ProfileB.Rows() == FeatureCount);
 	float MatchScore = 0;
 	for (uint FeatureIdx = 0; FeatureIdx < FeatureCount; ++FeatureIdx)
 		{
-		asserta(PosA < SIZE(ProfileA[FeatureIdx]));
-		asserta(PosB < SIZE(ProfileB[FeatureIdx]));
+		asserta(PosA < ProfileA.Cols());
+		asserta(PosB < ProfileB.Cols());
 		//float w = m_Params->m_Weights[FeatureIdx];
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
 		//float **ScoreMx = g_ScoreMxs2[F];
 		float **ScoreMx = m_Params->m_ScoreMxs[F];
-		const vector<byte> &ProfRowA = ProfileA[FeatureIdx];
-		const vector<byte> &ProfRowB = ProfileB[FeatureIdx];
+		const span<const byte> ProfRowA = ProfileA[FeatureIdx];
+		const span<const byte> ProfRowB = ProfileB[FeatureIdx];
 		byte ia = ProfRowA[PosA];
 		assert(ia < AlphaSize);
 		const float *ScoreMxRow = ScoreMx[ia];
@@ -346,8 +346,8 @@ float DSSAligner::GetScorePosPair(const vector<vector<byte> > &ProfileA,
 	return MatchScore;
 	}
 
-float DSSAligner::GetScoreSegPair(const vector<vector<byte> > &ProfileA,
-  const vector<vector<byte> > &ProfileB, uint PosA, uint PosB, uint n) const
+float DSSAligner::GetScoreSegPair(const Matrix<byte> &ProfileA,
+  const Matrix<byte> &ProfileB, uint PosA, uint PosB, uint n) const
 	{
 	float Score = 0;
 	for (uint i = 0; i < n; ++i)
@@ -369,7 +369,7 @@ void DSSAligner::SetSMx_QRev()
 	float **Sim = GetSMxData();
 
 	const uint FeatureCount = m_Params->GetFeatureCount();
-	asserta(SIZE((*m_ProfileA)) == FeatureCount);
+	asserta(m_ProfileA->Rows() == FeatureCount);
 
 // Special case first feature because = not += and
 	FEATURE F0 = m_Params->m_Features[0];
@@ -492,26 +492,26 @@ float DSSAligner::GetMegaHSPScore(uint Lo_i, uint Lo_j, uint Len)
 	{
 	StartTimer(GetMegaHSPScore);
 	const DSSParams &Params = *m_Params;
-	const vector<vector<byte> > &ProfileA = *m_ProfileA;
-	const vector<vector<byte> > &ProfileB = *m_ProfileB;
+	const Matrix<byte> &ProfileA = *m_ProfileA;
+	const Matrix<byte> &ProfileB = *m_ProfileB;
 	const uint FeatureCount = Params.GetFeatureCount();
-	asserta(SIZE(ProfileA) == FeatureCount);
-	asserta(SIZE(ProfileB) == FeatureCount);
+	asserta(ProfileA.Rows() == FeatureCount);
+	asserta(ProfileB.Rows() == FeatureCount);
 
 // Special case first feature because = not += and
 	FEATURE F0 = m_Params->m_Features[0];
 	uint AlphaSize0 = g_AlphaSizes2[F0];
 	float **ScoreMx0 = m_Params->m_ScoreMxs[F0];
-	const vector<byte> &ProfRowA = ProfileA[0];
-	const vector<byte> &ProfRowB = ProfileB[0];
+	const span<const byte> ProfRowA = ProfileA[0];
+	const span<const byte> ProfRowB = ProfileB[0];
 	float Total = 0;
 	for (uint FeatureIdx = 0; FeatureIdx < FeatureCount; ++FeatureIdx)
 		{
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
 		float **ScoreMx = m_Params->m_ScoreMxs[F];
-		const vector<byte> &ProfRowA = ProfileA[FeatureIdx];
-		const vector<byte> &ProfRowB = ProfileB[FeatureIdx];
+		const span<const byte> ProfRowA = ProfileA[FeatureIdx];
+		const span<const byte> ProfRowB = ProfileB[FeatureIdx];
 		for (uint k = 0; k < Len; ++k)
 			{
 			uint PosA = uint(Lo_i + k);
@@ -530,8 +530,8 @@ float DSSAligner::GetMegaHSPScore(uint Lo_i, uint Lo_j, uint Len)
 	}
 
 void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
-					  const vector<vector<byte> > &ProfileA,
-					  const vector<vector<byte> > &ProfileB)
+					  const Matrix<byte> &ProfileA,
+					  const Matrix<byte> &ProfileB)
 	{
 	//const DSSParams &Params = *m_Params;
 	//const vector<vector<byte> > &ProfileA = *m_ProfileA;
@@ -548,15 +548,15 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 	float **Sim = GetSMxData();
 
 	const uint FeatureCount = Params.GetFeatureCount();
-	asserta(SIZE(ProfileA) == FeatureCount);
-	asserta(SIZE(ProfileB) == FeatureCount);
+	asserta(ProfileA.Rows() == FeatureCount);
+	asserta(ProfileB.Rows() == FeatureCount);
 
 // Special case first feature because = not += and
 	FEATURE F0 = m_Params->m_Features[0];
 	uint AlphaSize0 = g_AlphaSizes2[F0];
 	float **ScoreMx0 = m_Params->m_ScoreMxs[F0];
-	const vector<byte> &ProfRowA = ProfileA[0];
-	const vector<byte> &ProfRowB = ProfileB[0];
+	const span<const byte> ProfRowA = ProfileA[0];
+	const span<const byte> ProfRowB = ProfileB[0];
 	for (uint PosA = 0; PosA < LA; ++PosA)
 		{
 		byte ia = ProfRowA[PosA];
@@ -578,8 +578,8 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
 		float **ScoreMx = m_Params->m_ScoreMxs[F];
-		const vector<byte> &ProfRowA = ProfileA[FeatureIdx];
-		const vector<byte> &ProfRowB = ProfileB[FeatureIdx];
+		const span<const byte> ProfRowA = ProfileA[FeatureIdx];
+		const span<const byte> ProfRowB = ProfileB[FeatureIdx];
 		for (uint PosA = 0; PosA < LA; ++PosA)
 			{
 			byte ia = ProfRowA[PosA];
@@ -636,7 +636,7 @@ void DSSAligner::Align_MuFilter(
   const PDBChain &ChainA, const PDBChain &ChainB,
   const vector<byte> &MuLettersA, const vector<uint> &MuKmersA,
   const vector<byte> &MuLettersB,const vector<uint> &MuKmersB,
-  const vector<vector<byte> > &ProfileA, const vector<vector<byte> > &ProfileB)
+  const Matrix<byte> &ProfileA, const Matrix<byte> &ProfileB)
 	{
 	SetQuery(ChainA, &ProfileA, &MuLettersA, &MuKmersA, FLT_MAX);
 	SetTarget(ChainB, &ProfileB, &MuLettersB, &MuKmersB, FLT_MAX);
@@ -676,7 +676,7 @@ void DSSAligner::UnsetQuery()
 
 void DSSAligner::SetQuery(
 	const PDBChain &Chain,
-	const vector<vector<byte> > *ptrProfile,
+	const Matrix<byte> *ptrProfile,
 	const vector<byte> *ptrMuLetters,
 	const vector<uint> *ptrMuKmers,
 	float SelfRevScore)
@@ -703,7 +703,7 @@ void DSSAligner::SetQuery(
 
 void DSSAligner::SetTarget(
 	const PDBChain &Chain,
-	const vector<vector<byte> > *ptrProfile,
+	const Matrix<byte> *ptrProfile,
 	const vector<byte> *ptrMuLetters,
 	const vector<uint> *ptrMuKmers,
 	float SelfRevScore)

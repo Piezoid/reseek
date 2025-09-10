@@ -4,6 +4,7 @@
 #include "dbsearcher.h"
 #include "dssaligner.h"
 #include "xdpmem.h"
+#include "arrays.h"
 #include <atomic>
 #include <map>
 #include <mutex>
@@ -27,7 +28,7 @@ public:
 	bool m_QuerySelf = false;
 
 // Per-chain vectors [ChainIdx]
-	vector<vector<vector<byte> > *> m_DBProfiles;
+	vector<Matrix<byte>*> m_DBProfiles;
 	vector<vector<byte> *> m_DBMuLettersVec;
 	vector<vector<uint> *> m_DBMuKmersVec;
 	vector<float> m_DBSelfRevScores;
@@ -82,7 +83,7 @@ public:
 	uint GetDBSize() const;
 	bool GetNextPairSelf(uint &ChainIndex1, uint &ChainIndex2);
 	void RunStats() const;
-	void AddChain(PDBChain *ptrChain, vector<vector<byte> > *ptrProfile,
+	void AddChain(PDBChain *ptrChain, Matrix<byte> *ptrProfile,
 	  vector<byte> *ptrMuLetters);
 
 	bool Reject(DSSAligner &DA, bool Up) const;

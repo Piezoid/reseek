@@ -1,5 +1,6 @@
 #include "myutils.h"
 #include "dssaligner.h"
+#include "arrays.h"
 #include "chainreader2.h"
 
 void cmd_alignselfrev()
@@ -18,8 +19,6 @@ void cmd_alignselfrev()
 	DSS D;
 	D.SetParams(Params);
 
-	vector<vector<byte> > Profile;
-	vector<vector<byte> > RevProfile;
 	ChainReader2 CR;
 	CR.Open(QFN);
 	uint N = 0;
@@ -35,10 +34,10 @@ void cmd_alignselfrev()
 		Rev.Reverse();
 
 		D.Init(*Chain);
-		D.GetProfile(Profile);
+		Matrix<byte> Profile = D.GetProfile();
 
 		D.Init(Rev);
-		D.GetProfile(RevProfile);
+		Matrix<byte> RevProfile = D.GetProfile();
 
 		DA.SetQuery(*Chain, &Profile, 0, 0, FLT_MAX);
 		DA.SetTarget(Rev, &RevProfile, 0, 0, FLT_MAX);

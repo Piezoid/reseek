@@ -2,10 +2,11 @@
 #include "chainreader2.h"
 #include "dssaligner.h"
 #include "pdbchain.h"
+#include "arrays.h"
 #include "abcxyz.h"
 
 float GetSelfRevScore(DSSAligner &DA, DSS &D, const PDBChain &Chain,
-					  const vector<vector<byte> > &Profile,
+					  const Matrix<byte> &Profile,
 					  const vector<byte> *ptrMuLetters,
 					  const vector<uint> *ptrMuKmers)
 	{
@@ -13,9 +14,8 @@ float GetSelfRevScore(DSSAligner &DA, DSS &D, const PDBChain &Chain,
 		return 0;
 	PDBChain RevChain;
 	Chain.GetReverse(RevChain);
-	vector<vector<byte> > RevProfile;
 	D.Init(RevChain);
-	D.GetProfile(RevProfile);
+	Matrix<byte> RevProfile = D.GetProfile();
 
 	DA.SetQuery(Chain, &Profile, ptrMuLetters, ptrMuKmers, FLT_MAX);
 
@@ -77,9 +77,6 @@ static void XformLines(const double t[3],
 static float AlignPair1(const DSSParams &Params, DSS &D, DSSAligner &DA,
   const PDBChain *ChainQ, const PDBChain *ChainT, bool DoOutput)
 	{
-	vector<vector<byte> > ProfileQ;
-	vector<vector<byte> > ProfileT;
-
 	vector<byte> MuLettersQ;
 	vector<uint> MuKmersQ;
 
@@ -87,7 +84,7 @@ static float AlignPair1(const DSSParams &Params, DSS &D, DSSAligner &DA,
 	uint BestChainIndexQ = UINT_MAX;
 	uint BestChainIndexT = UINT_MAX;
 	D.Init(*ChainQ);
-	D.GetProfile(ProfileQ);
+	Matrix<byte> ProfileQ = D.GetProfile();
 	if (Params.m_Omega > 0)
 		D.GetMuLetters(MuLettersQ);
 
@@ -97,7 +94,7 @@ static float AlignPair1(const DSSParams &Params, DSS &D, DSSAligner &DA,
 	vector<uint> MuKmersT;
 
 	D.Init(*ChainT);
-	D.GetProfile(ProfileT);
+	Matrix<byte> ProfileT = D.GetProfile();
 
 	if (Params.m_Omega > 0)
 		D.GetMuLetters(MuLettersT);

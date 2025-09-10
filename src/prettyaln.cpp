@@ -2,6 +2,7 @@
 #include "pdbchain.h"
 #include "abcxyz.h"
 #include "dssaligner.h"
+#include "arrays.h"
 
 double Kabsch(const PDBChain &ChainA, const PDBChain &ChainB,
   uint LoA, uint LoB, const string &Path,
@@ -25,7 +26,7 @@ static char GetAnnotChar(char a, char b)
 
 void DSSAligner::PrettyAln(FILE *f,
   const PDBChain &A, const PDBChain &B,
-  const vector<vector<byte> > &ProfileA, const vector<vector<byte> > &ProfileB,
+  const Matrix<byte> &ProfileA, const Matrix<byte> &ProfileB,
   uint LoA, uint LoB, const string &Path, float AQ, float Evalue) const
 	{
 	if (f == 0)

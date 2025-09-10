@@ -1,5 +1,6 @@
 #include "myutils.h"
 #include "scop40bench.h"
+#include "arrays.h"
 #include "mx.h"
 #include "pdbchain.h"
 #include "xdpmem.h"
@@ -113,7 +114,7 @@ uint SCOP40Bench::GetDomIdx(const string &Dom_or_DomSlashId,
 	return DomIdx;
 	}
 
-const vector<vector<byte> > &SCOP40Bench::GetProfileByDomIdx(uint DomIdx) const
+const Matrix<byte> &SCOP40Bench::GetProfileByDomIdx(uint DomIdx) const
 	{
 	asserta(DomIdx < SIZE(m_DBProfiles));
 	asserta(DomIdx < SIZE(m_DomIdxToChainIdx));
@@ -281,8 +282,8 @@ float SCOP40Bench::AlignDomPair(uint ThreadIndex,
 	const PDBChain &Chain1 = GetChainByDomIdx(Dom1);
 	const PDBChain &Chain2 = GetChainByDomIdx(Dom2);
 
-	const vector<vector<byte> > &Profile1 = GetProfileByDomIdx(Dom1);
-	const vector<vector<byte> > &Profile2 = GetProfileByDomIdx(Dom2);
+	const Matrix<byte> &Profile1 = GetProfileByDomIdx(Dom1);
+	const Matrix<byte> &Profile2 = GetProfileByDomIdx(Dom2);
 
 	asserta(ThreadIndex < SIZE(m_DAs));
 	DSSAligner &DA = *m_DAs[ThreadIndex];
