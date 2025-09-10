@@ -210,7 +210,9 @@ void PrefilterMu::Search_Kmer(uint Kmer, uint TPos)
 		asserta(QL32 < UINT16_MAX);
 		uint16_t QL = uint16_t(QL32);
 		diag dg(QL, m_TL);
-		uint16_t Diag = dg.getd(QSeqPos, TPos);
+		int Diag = dg.getd(QSeqPos, TPos);
+		if (Diag < 0)
+			continue;
 		if (Diag > m_Mask14)
 			continue;
 #if TRACE
@@ -219,11 +221,11 @@ void PrefilterMu::Search_Kmer(uint Kmer, uint TPos)
 		string QKmerStr;
 		m_QKmerIndex->KmerToStr(m_TBaseKmer, TKmerStr);
 		m_QKmerIndex->KmerToStr(Kmer, QKmerStr);
-		if (DoTrace(QSeqIdx)) Log("m_DiagBag(QSeqIdx=%u, Diag=%u) Q%u=%s T%u=%s\n",
+		if (DoTrace(QSeqIdx)) Log("m_DiagBag(QSeqIdx=%u, Diag=%i) Q%u=%s T%u=%s\n",
 								  QSeqIdx, Diag, QSeqPos, QKmerStr.c_str(), TPos, TKmerStr.c_str());
 		}
 #endif
-		m_DiagBag.Add(QSeqIdx, Diag);
+		m_DiagBag.Add(QSeqIdx, (uint16_t) Diag);
 		}
 	}
 
