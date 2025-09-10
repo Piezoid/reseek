@@ -398,16 +398,16 @@ uint DSS::CalcREN(uint Pos, uint NEN) const
 	if (iLo == INT_MAX || iHi == INT_MAX)
 		return UINT_MAX;
 
-	double MinDist = 999;
+	float MinDist2 = 999*999;
 	uint MinPos = UINT_MAX;
 	for (uint Pos2 = uint(iLo); Pos2 <= uint(iHi); ++Pos2)
 		{
 		if (Pos2 + m_NEN_w >= Pos && Pos2 <= Pos + m_NEN_w)
 			continue;
-		double Dist = m_Chain->GetDist(Pos, Pos2);
-		if (Dist < MinDist)
+		float Dist2 = m_Chain->GetDist2(Pos, Pos2);
+		if (Dist2 < MinDist2)
 			{
-			MinDist = Dist;
+			MinDist2 = Dist2;
 			MinPos = Pos2;
 			}
 		}
@@ -423,16 +423,16 @@ uint DSS::CalcNEN(uint Pos) const
 	int iHi = int(Pos) + m_NEN_W;
 	if (iHi >= int(L))
 		iHi = int(L)-1;
-	double MinDist = 999;
+	float MinDist2 = 999 * 999;
 	uint MinPos = UINT_MAX;
 	for (uint Pos2 = uint(iLo); Pos2 <= uint(iHi); ++Pos2)
 		{
 		if (Pos2 + m_NEN_w >= Pos && Pos2 <= Pos + m_NEN_w)
 			continue;
-		double Dist = m_Chain->GetDist(Pos, Pos2);
-		if (Dist < MinDist)
+		float Dist2 = m_Chain->GetDist2(Pos, Pos2);
+		if (Dist2 < MinDist2)
 			{
-			MinDist = Dist;
+			MinDist2 = Dist2;
 			MinPos = Pos2;
 			}
 		}
