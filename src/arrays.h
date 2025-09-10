@@ -12,7 +12,7 @@ public:
     span(T *data, uint size) : m_data(data), m_size(size) {}
     T *data() const { return m_data; }
     uint size() const { return m_size; }
-    T &operator[](uint index) const { return m_data[index]; }
+    T &operator[](uint index) const { return m_data[(size_t) index]; }
     };
 
 
@@ -72,15 +72,16 @@ public:
         return *this;
         }
     
-    static Matrix<T> Allocate(uint rows, uint cols) { return Matrix<T>(myalloc(T, rows*cols), rows, cols, false); }
+    static Matrix<T> Allocate(uint rows, uint cols) { return Matrix<T>(myalloc64(T, rows*cols), rows, cols, true); }
     static Matrix<T> FromOwnedData(T *data, uint rows, uint cols) { return Matrix<T>(data, rows, cols, true); }
+    static Matrix<T> FromSharedData(T *data, uint rows, uint cols) { return Matrix<T>(data, rows, cols, false); }
 
     T *data() const { return m_data; }
     uint Rows() const { return m_rows; }
     uint Cols() const { return m_cols; }
 
-    span<T> operator[](uint row) { return span<T>(m_data + row*m_cols, m_cols); }
-    span<const T> operator[](uint row) const { return span<const T>(m_data + row*m_cols, m_cols); }
+    span<T> operator[](uint row) { return span<T>(m_data + (size_t) row * (size_t) m_cols, m_cols); }
+    span<const T> operator[](uint row) const { return span<const T>(m_data + (size_t) row * (size_t) m_cols, m_cols); }
 
     ~Matrix() { if (m_OwnData) myfree(m_data); }
     };
@@ -98,6 +99,7 @@ Matrix<T> VectorToMatrix(const vector<vector<T>> &vec) {
     
     for (uint i = 0; i < rows; ++i) {
         for (uint j = 0; j < cols; ++j) {
+            asserta(vec[i].size() == cols);
             data[i * cols + j] = vec[i][j];
         }
     }
