@@ -455,8 +455,8 @@ void MuDex::Put(uint DataOffset, uint32_t SeqIdx, uint16_t SeqPos)
 	assert(DataOffset < m_Size);
 	uint64 Bytes64 = uint64(m_ItemSize)*uint64(DataOffset);
 	uint8_t *ptr = m_Data + Bytes64;
-	*(uint32_t *) ptr = SeqIdx;
-	*(uint16_t *) (ptr + 4) = SeqPos;
+	memcpy(ptr, &SeqIdx, sizeof(SeqIdx));
+	memcpy(ptr + 4, &SeqPos, sizeof(SeqPos));
 #if DEBUG_CHECKS
 	{
 	uint32_t Check_SeqIdx;
@@ -471,8 +471,8 @@ void MuDex::Put(uint DataOffset, uint32_t SeqIdx, uint16_t SeqPos)
 void MuDex::Get(uint DataOffset, uint32_t &SeqIdx, uint16_t &SeqPos) const
 	{
 	const uint8_t *ptr = m_Data + m_ItemSize*uint64(DataOffset);
-	SeqIdx = *(uint32_t *) ptr;
-	SeqPos = *(uint16_t *) (ptr + 4);
+	memcpy(&SeqIdx, ptr, sizeof(SeqIdx));
+	memcpy(&SeqPos, ptr + 4, sizeof(SeqPos));
 	}
 
 void MuDex::GetKmersAndSizes(const byte *Seq, uint L,
