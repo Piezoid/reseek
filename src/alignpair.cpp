@@ -192,9 +192,6 @@ void cmd_alignpair()
 	if (ChainCountQ == 0) Die("No chains found in %s", QFN.c_str());
 	if (ChainCountT == 0) Die("No chains found in %s", TFN.c_str());
 
-	vector<vector<byte> > ProfileQ;
-	vector<vector<byte> > ProfileT;
-
 	vector<byte> MuLettersQ;
 	vector<uint> KmersQ;
 
