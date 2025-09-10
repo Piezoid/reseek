@@ -297,6 +297,7 @@ void PDBChain::SetPt(uint Pos, const vector<float> &Pt)
 	m_Zs[Pos] = Pt[Z];
 	}
 
+	HOT_FUNCTION ALWAYS_INLINE
 void PDBChain::GetXYZ(uint Pos, float &x, float &y, float &z) const
 	{
 	assert(Pos < SIZE(m_Xs));
@@ -307,6 +308,7 @@ void PDBChain::GetXYZ(uint Pos, float &x, float &y, float &z) const
 	z = m_Zs[Pos];
 	}
 
+	HOT_FUNCTION ALWAYS_INLINE
 float PDBChain::GetDist(uint Pos1, uint Pos2) const
 	{
 	float x1, y1, z1;
@@ -317,6 +319,7 @@ float PDBChain::GetDist(uint Pos1, uint Pos2) const
 	return d;
 	}
 
+HOT_FUNCTION ALWAYS_INLINE
 float PDBChain::GetDist2(uint Pos1, uint Pos2) const
 	{
 	float x1 = m_Xs[Pos1];
@@ -335,6 +338,7 @@ float PDBChain::GetDist2(uint Pos1, uint Pos2) const
 	return d2;
 	}
 
+HOT_FUNCTION ALWAYS_INLINE
 uint PDBChain::GetSeqLength() const
 	{
 	return SIZE(m_Seq);

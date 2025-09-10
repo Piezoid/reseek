@@ -107,6 +107,49 @@ void myassertfail(const char *Exp, const char *File, unsigned Line);
 
 #define NotUsed(v)	((void *) &v)
 
+/* ------------------- Compiler Detection ------------------- */
+#if defined(__clang__) || defined(__GNUC__)
+    /* ------------------- GCC / Clang ------------------- */
+    #define ALWAYS_INLINE __attribute__((always_inline))
+    #define NEVER_INLINE __attribute__((noinline))
+
+    #define HOT_FUNCTION __attribute__((hot))
+    #define COLD_FUNCTION __attribute__((cold))
+
+    #define LIKELY(x)   __builtin_expect(!!(x), 1)
+    #define UNLIKELY(x) __builtin_expect(!!(x), 0)
+
+    #define UNREACHABLE() __builtin_unreachable()
+
+#elif defined(_MSC_VER)
+    /* ------------------- MSVC ------------------- */
+    #define ALWAYS_INLINE __forceinline
+    #define NEVER_INLINE __declspec(noinline)
+
+    #pragma section(".text$hot", read, execute)
+    #pragma section(".text$cold", read, execute)
+    #define HOT_FUNCTION __declspec(code_seg(".text$hot"))
+    #define COLD_FUNCTION __declspec(code_seg(".text$cold"))
+
+    #define LIKELY(x)   (x)
+    #define UNLIKELY(x) (x)
+
+    #define UNREACHABLE() __assume(0)
+
+#else
+    /* ------------------- Unknown / fallback ------------------- */
+    #define ALWAYS_INLINE
+    #define NEVER_INLINE
+
+    #define HOT_FUNCTION
+    #define COLD_FUNCTION
+
+    #define LIKELY(x)   (x)
+    #define UNLIKELY(x) (x)
+
+    #define UNREACHABLE() ((void)0)
+#endif
+
 // pom=plus or minus, tof=true or false, yon=yes or no
 static inline char pom(bool Plus)	{ return Plus ? '+' : '-'; }
 static inline char tof(bool x)		{ return x ? 'T' : 'F';	}

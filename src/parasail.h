@@ -233,7 +233,7 @@ static inline int8_t _mm256_hmax_epi8_rpl(__m256i a) {
     a = _mm256_max_epi8(a, _mm256_slli_si256(a, 4));
     a = _mm256_max_epi8(a, _mm256_slli_si256(a, 2));
     a = _mm256_max_epi8(a, _mm256_slli_si256(a, 1));
-    return _mm256_extract_epi8(a, 31);
+    return (int8_t) _mm256_extract_epi8(a, 31);
 }
 
 static inline void parasail_memset___m256i(__m256i *b, __m256i c, size_t len)

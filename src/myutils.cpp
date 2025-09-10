@@ -2449,12 +2449,13 @@ const char *GetCurrentThreadStr(string &s)
 	return s.c_str();
 	}
 
+__attribute__((no_sanitize("unsigned-integer-overflow")))
 uint GetUniqueInt()
 	{
 	uint pid = uint(getpid());
 	uint now = uint(time(0));
 	uint i = pid ^ now;
-	uint j = i*1664525 + 1013904223;
+	uint j = i*1664525u + 1013904223u;
 	return j;
 	}
 
