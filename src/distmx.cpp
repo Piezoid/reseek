@@ -1,7 +1,7 @@
 #include "myutils.h"
 #include "dbsearcher.h"
 #include "chainreader2.h"
-#include "mx.h"
+#include "arrays.h"
 #include "pdbchain.h"
 #include "xdpmem.h"
 #include "cigar.h"

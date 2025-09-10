@@ -1,5 +1,5 @@
 #include "myutils.h"
-#include "mx.h"
+#include "arrays.h"
 #include "alpha.h"
 #include "xdpmem.h"
 

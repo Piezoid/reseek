@@ -1,16 +1,17 @@
 #include "myutils.h"
-#include "mx.h"
+#include "arrays.h"
 #include "xdpmem.h"
 
 float GetBlosum62Score(char a, char b);
 
-int SWFastGapless_Int(XDPMem &Mem, const Mx<int8_t> &SMx, uint LA, uint LB,
+int SWFastGapless_Int(XDPMem &Mem, const Matrix<int8_t> &SMx, uint LA, uint LB,
   uint &Besti, uint &Bestj)
 	{
 	Mem.Alloc(LA+1, LB+1);
-	asserta(SMx.m_RowCount == LA);
-	asserta(SMx.m_ColCount == LB);
-	const int8_t * const *SMxData = SMx.GetData();
+	asserta(SMx.Rows() == LA);
+	asserta(SMx.Cols() == LB);
+	// Use Matrix directly - need to change function signature
+	const int8_t *SMxData = SMx.data();
 
 	Besti = UINT_MAX;
 	Bestj = UINT_MAX;
@@ -28,7 +29,7 @@ int SWFastGapless_Int(XDPMem &Mem, const Mx<int8_t> &SMx, uint LA, uint LB,
 	int M0 = 0;
 	for (uint i = 0; i < LA; ++i)
 		{
-		const int8_t *SMxRow = SMxData[i];
+		const int8_t *SMxRow = SMxData + i * LB;
 		for (uint j = 0; j < LB; ++j)
 			{
 			int SavedM0 = M0;

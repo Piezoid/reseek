@@ -1,5 +1,5 @@
 #include "myutils.h"
-#include "mx.h"
+#include "arrays.h"
 #include "dssaligner.h"
 #include "pdbchain.h"
 #include "alpha.h"
@@ -18,14 +18,14 @@ mutex DSSAligner::m_OutputLock;
 uint SWFastPinopGapless(const int8_t * const *AP, uint LA,
   const int8_t *B, uint LB);
 void LogAln(const char *A, const char *B, const char *Path, unsigned ColCount);
-float SWFast(XDPMem &Mem, const float * const *SMxData, uint LA, uint LB,
+float SWFast(XDPMem &Mem, const float *SMxData, uint LA, uint LB,
   float Open, float Ext, uint &Loi, uint &Loj, uint &Leni, uint &Lenj,
   string &Path);
-float SWFastGapless(XDPMem &Mem, const Mx<float> &SMx, uint LA, uint LB,
+float SWFastGapless(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB,
   uint &Besti, uint &Bestj);
-float SWFastGapless(XDPMem &Mem, const Mx<float> &SMx, uint LA, uint LB,
+float SWFastGapless(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB,
   uint &Besti, uint &Bestj);
-int SWFastGapless_Int(XDPMem &Mem, const Mx<int8_t> &SMx, uint LA, uint LB,
+int SWFastGapless_Int(XDPMem &Mem, const Matrix<int8_t> &SMx, uint LA, uint LB,
   uint &Besti, uint &Bestj);
 void GetPathCounts(const string &Path, uint &M, uint &D, uint &I);
 float SWFastGaplessProfb(float *DProw_, const float * const *ProfA,
@@ -362,11 +362,10 @@ void DSSAligner::SetSMx_QRev()
 	if (LA > 500)
 		LA = 500;//FIXME
 
-	//Mx<float> &SMx = m_SMx;
+	//Matrix<float> &SMx = m_SMx;
 	//m_SMx.Alloc(LA, LA, __FILE__, __LINE__);
 	AllocSMxData(LA, LA);
 	StartTimer(SetSMx_QRev);
-	float **Sim = GetSMxData();
 
 	const uint FeatureCount = m_Params->GetFeatureCount();
 	asserta(m_ProfileA->Rows() == FeatureCount);
@@ -379,7 +378,7 @@ void DSSAligner::SetSMx_QRev()
 	for (uint PosA = 0; PosA < LA; ++PosA)
 		{
 		byte ia = (*m_ProfileA)[0][PosA];
-		float *SimRow = Sim[PosA];
+		float *SimRow = m_SMx.data() + PosA * m_SMx.Cols();
 		const float *ScoreMxRow = ScoreMx0[ia];
 
 		for (uint PosB = 0; PosB < LA; ++PosB)
@@ -400,7 +399,7 @@ void DSSAligner::SetSMx_QRev()
 		for (uint PosA = 0; PosA < LA; ++PosA)
 			{
 			byte ia = (*m_ProfileA)[FeatureIdx][PosA];
-			float *SimRow = Sim[PosA];
+			float *SimRow = m_SMx.data() + PosA * m_SMx.Cols();
 			const float *ScoreMxRow = ScoreMx[ia];
 
 			for (uint PosB = 0; PosB < LA; ++PosB)
@@ -419,7 +418,7 @@ void DSSAligner::SetSMx_QRev()
 		{
 		for (uint PosB = 0; PosB < LA; ++PosB)
 			{
-			float MatchScore = Sim[PosA][PosB];
+			float MatchScore = m_SMx[PosA][PosB];
 			float MatchScore2 = GetScorePosPair(*m_ProfileA, *m_ProfileA, PosA, LA-1-PosB);
 			asserta(feq(MatchScore2, MatchScore));
 			}
@@ -541,11 +540,10 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 
 // Memory blows up with grow-only strategy due to tail of long chains
 	//m_SMx.Clear();
-	//Mx<float> &SMx = m_SMx;
+	//Matrix<float> &SMx = m_SMx;
 	//m_SMx.Alloc(LA, LB, __FILE__, __LINE__);
 	AllocSMxData(LA, LB);
 	StartTimer(SetSMx_NoRev);
-	float **Sim = GetSMxData();
 
 	const uint FeatureCount = Params.GetFeatureCount();
 	asserta(ProfileA.Rows() == FeatureCount);
@@ -560,7 +558,7 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 	for (uint PosA = 0; PosA < LA; ++PosA)
 		{
 		byte ia = ProfRowA[PosA];
-		float *SimRow = Sim[PosA];
+		float *SimRow = m_SMx.data() + PosA * m_SMx.Cols();
 		assert(ia < AlphaSize0);
 		const float *ScoreMxRow = ScoreMx0[ia];
 
@@ -585,7 +583,7 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 			byte ia = ProfRowA[PosA];
 			assert(ia < AlphaSize);
 			const float *ScoreMxRow = ScoreMx[ia];
-			float *SimRow = Sim[PosA];
+			float *SimRow = m_SMx.data() + PosA * m_SMx.Cols();
 
 			for (uint PosB = 0; PosB < LB; ++PosB)
 				{
@@ -604,7 +602,7 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 		{
 		for (uint PosB = 0; PosB < LB; ++PosB)
 			{
-			float MatchScore = Sim[PosA][PosB];
+			float MatchScore = m_SMx[PosA][PosB];
 			float MatchScore2 = GetScorePosPair(ProfileA, ProfileB, PosA, PosB);
 			asserta(feq(MatchScore2, MatchScore));
 			}
@@ -1419,53 +1417,26 @@ void DSSAligner::PostAlignMKF()
 	CalcEvalue();
 	}
 
-const float * const *DSSAligner::GetSMxData() const
+const float *DSSAligner::GetSMxData() const
 	{
-	return m_SMx_Data;
+	return m_SMx.data();
 	}
 
-float **DSSAligner::GetSMxData()
+float *DSSAligner::GetSMxData()
 	{
-	return m_SMx_Data;
+	return m_SMx.data();
 	}
 
 void DSSAligner::AllocSMxData(uint LA, uint LB)
 	{
-	if (LA <= (2*m_SMx_Rows)/3 && LB <= (2*m_SMx_Cols)/3)
+	if (LA <= (2*m_SMx.Rows())/3 && LB <= (2*m_SMx.Cols())/3)
 		return;
-	FreeSMxData();
-	
-	size_t n = size_t(LA)*size_t(LB);
-	uint un = uint(n);
-	if (size_t(un) != n)
-		Die("AllocSMxData(%u, %u) overflow", LA, LB);
 
-	m_SMx_Buffer = (float *) malloc(un*sizeof(float));
-	m_SMx_Data = (float **) malloc(LA*sizeof(float *));
-	for (uint i = 0; i < LA; ++i)
-		m_SMx_Data[i] = m_SMx_Buffer + i*LB;
-
-	m_SMx_Rows = LA;
-	m_SMx_Cols = LB;
-	m_SMx_BufferSize = n;
+	m_SMx = Matrix<float>::Allocate(LA, LB);
 	}
 
 void DSSAligner::FreeSMxData()
 	{
-	if (m_SMx_Rows == 0)
-		{
-		asserta(m_SMx_BufferSize == 0);
-		asserta(m_SMx_Buffer == 0);
-		asserta(m_SMx_Data == 0);
-		return;
-		}
-
-	free(m_SMx_Data);
-	free(m_SMx_Buffer);
-
-	m_SMx_Data = 0;
-	m_SMx_Buffer = 0;
-	m_SMx_BufferSize = 0;
-	m_SMx_Rows = 0;
-	m_SMx_Cols = 0;
+	// Matrix destructor will handle cleanup automatically
+	m_SMx = Matrix<float>();
 	}

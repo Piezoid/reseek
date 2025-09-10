@@ -3,10 +3,9 @@
 #include "dssparams.h"
 #include "pdbchain.h"
 #include "xdpmem.h"
-#include "mx.h"
+#include "arrays.h"
 #include "userfields.h"
 #include "mukmerfilter.h"
-#include "arrays.h"
 #include <mutex>
 
 #define SCORE_DIST	0
@@ -42,7 +41,7 @@ public:
 	string m_XDropPath;
 
 	XDPMem m_Mem;
-	//Mx<float> m_SM;
+	//Matrix<float> m_SM;
 
 	uint m_AlnDomIdx1 = UINT_MAX;
 	uint m_AlnDomIdx2 = UINT_MAX;
@@ -74,11 +73,7 @@ public:
 
 	vector<USERFIELD> m_UFs;
 
-	float **m_SMx_Data = 0;
-	float *m_SMx_Buffer = 0;
-	size_t m_SMx_BufferSize = 0;
-	uint m_SMx_Rows = 0;
-	uint m_SMx_Cols = 0;
+	Matrix<float> m_SMx;
 
 	float m_GlobalScore = FLT_MAX;
 	string m_GlobalPath;
@@ -173,8 +168,8 @@ public:
 	void SetMuQP_Para();
 	//void SetSMx_Mu();
 	void AllocDProw(uint LB);
-	const float * const *GetSMxData() const;
-	float **GetSMxData();
+	const float *GetSMxData() const;
+	float *GetSMxData();
 	void AllocSMxData(uint LA, uint LB);
 	void FreeSMxData();
 

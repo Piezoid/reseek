@@ -1,6 +1,5 @@
 #include "myutils.h"
 #include "xdpmem.h"
-#include "mx.h"
 
 void SetBLOSUM62();
 float GetBlosum62Score(char a, char b);
@@ -91,18 +90,16 @@ static void Test(const string &A, const string &B)
 	const uint LA = SIZE(A);
 	const uint LB = SIZE(B);
 
-	Mx<float> SMx;
-	SMx.Alloc(LA, LB, __FILE__, __LINE__);
-	float **S = SMx.GetData();
+	Matrix<float> SMx = Matrix<float>::Allocate(LA, LB);
 	for (uint i = 0; i < LA; ++i)
 		for (uint j = 0; j < LB; ++j)
-			S[i][j] = SubFn(0, i, j);
+			SMx[i][j] = SubFn(0, i, j);
 
 	string SWPath;
 	uint Loi, Loj, Leni, Lenj;
 	Log("______________________________SWFast________________________\n");
 	float SWScore =
-	  SWFast(Mem, SMx.GetData(), LA, LB, Open, Ext, Loi, Loj, Leni, Lenj, SWPath);
+	  SWFast(Mem, SMx.data(), LA, LB, Open, Ext, Loi, Loj, Leni, Lenj, SWPath);
 	uint LoA = Loi;
 	uint LoB = Loj;
 	ProgressLog("SW score = %.3g Path = %s\n", SWScore, SWPath.c_str());

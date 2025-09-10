@@ -1,17 +1,18 @@
 #include "myutils.h"
-#include "mx.h"
+#include "arrays.h"
 #include "xdpmem.h"
 
 float GetBlosum62Score(char a, char b);
 
-static float SWGaplessNoTB(XDPMem &Mem, const Mx<float> &SMx, uint LA, uint LB)
+static float SWGaplessNoTB(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB)
 	{
 #if TRACE && !DOTONLY
 	SMx.LogMe();
 #endif
 
 	Mem.Alloc(LA+32, LB+32);
-	const float * const *SMxData = SMx.GetData();
+	// Use Matrix directly - need to change function signature
+	const float *SMxData = SMx.data();
 
 	float *Mrow = Mem.GetDPRow1();
 
@@ -23,7 +24,7 @@ static float SWGaplessNoTB(XDPMem &Mem, const Mx<float> &SMx, uint LA, uint LB)
 	float M0 = float(0);
 	for (uint i = 0; i < LA; ++i)
 		{
-		const float *SMxRow = SMxData[i];
+		const float *SMxRow = SMxData + i * LB;
 		float I0 = MINUS_INFINITY;
 		for (uint j = 0; j < LB; ++j)
 			{
@@ -43,13 +44,14 @@ static float SWGaplessNoTB(XDPMem &Mem, const Mx<float> &SMx, uint LA, uint LB)
 	return BestScore;
 	}
 
-float SWFastGapless(XDPMem &Mem, const Mx<float> &SMx, uint LA, uint LB,
+float SWFastGapless(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB,
   uint &Besti, uint &Bestj)
 	{
 	Mem.Alloc(LA+1, LB+1);
-	asserta(SMx.m_RowCount == LA);
-	asserta(SMx.m_ColCount == LB);
-	const float * const *SMxData = SMx.GetData();
+	asserta(SMx.Rows() == LA);
+	asserta(SMx.Cols() == LB);
+	// Use Matrix directly - need to change function signature
+	const float *SMxData = SMx.data();
 
 	Besti = UINT_MAX;
 	Bestj = UINT_MAX;
@@ -67,7 +69,7 @@ float SWFastGapless(XDPMem &Mem, const Mx<float> &SMx, uint LA, uint LB,
 	float M0 = float (0);
 	for (uint i = 0; i < LA; ++i)
 		{
-		const float *SMxRow = SMxData[i];
+		const float *SMxRow = SMxData + i * LB;
 		for (uint j = 0; j < LB; ++j)
 			{
 			float SavedM0 = M0;
@@ -98,23 +100,26 @@ float SWFastGapless(XDPMem &Mem, const Mx<float> &SMx, uint LA, uint LB,
 	}
 
 // Recursion DP[i+1][j+1] = max { 0, DP[i][j] + S[i][j] }
-float SWGapless(Mx<float> &DPMx, const Mx<float> &SMx, uint LA, uint LB,
+float SWGapless(Matrix<float> &DPMx, const Matrix<float> &SMx, uint LA, uint LB,
   uint &Loi, uint &Loj, uint &ColCount)
 	{
-	DPMx.Alloc(LA+1, LB+1, __FILE__, __LINE__);
-	float **DP = DPMx.GetData();
+	DPMx = Matrix<float>::Allocate(LA+1, LB+1);
 #if DEBUG
-	DPMx.Assign(FLT_MAX);
+	for (uint i = 0; i <= LA; ++i) {
+		for (uint j = 0; j <= LB; ++j) {
+			DPMx[i][j] = FLT_MAX;
+		}
+	}
 #endif
-	const float * const *S = SMx.GetData();
+	// Use Matrix directly
 
 	Loi = UINT_MAX;
 	Loj = UINT_MAX;
 	ColCount = UINT_MAX;
 	for (uint i = 0; i <= LA; ++i)
-		DP[i][0] = 0;
+		DPMx[i][0] = 0;
 	for (uint j = 0; j <= LB; ++j)
-		DP[0][j] = 0;
+		DPMx[0][j] = 0;
 
 	float BestScore = 0;
 	uint Besti = UINT_MAX;
@@ -123,11 +128,11 @@ float SWGapless(Mx<float> &DPMx, const Mx<float> &SMx, uint LA, uint LB,
 		{
 		for (uint j = 0; j < LB; ++j)
 			{
-			float sij = S[i][j];
-			float m = DP[i][j] + sij;
+			float sij = SMx[i][j];
+			float m = DPMx[i][j] + sij;
 			if (m > 0)
 				{
-				DP[i+1][j+1] = m;
+				DPMx[i+1][j+1] = m;
 				if (m > BestScore)
 					{
 					BestScore = m;
@@ -136,7 +141,7 @@ float SWGapless(Mx<float> &DPMx, const Mx<float> &SMx, uint LA, uint LB,
 					}
 				}
 			else
-				DP[i+1][j+1] = 0;
+				DPMx[i+1][j+1] = 0;
 			}
 		}
 
@@ -154,7 +159,7 @@ float SWGapless(Mx<float> &DPMx, const Mx<float> &SMx, uint LA, uint LB,
 	//DPMx.LogMe();
 	for (;;)
 		{
-		float s = S[i][j];
+		float s = SMx[i][j];
 		Sum += s;
 		if (Sum >= BestScore - 0.01 || i == 0 || j == 0)
 			{
@@ -173,22 +178,26 @@ float SWGapless(Mx<float> &DPMx, const Mx<float> &SMx, uint LA, uint LB,
 
 #if 0
 static void MakeBlosumS(const string &A, const string &B,
-  Mx<float> &MxS)
+  Matrix<float> &MxS)
 	{
 	uint LA = SIZE(A);
 	uint LB = SIZE(B);
-	MxS.Alloc("BlosumS", LA, LB);
+	MxS = Matrix<float>::Allocate(LA, LB);
 #if DEBUG
-	MxS.Assign(FLT_MAX);
+	for (uint i = 0; i < LA; ++i) {
+		for (uint j = 0; j < LB; ++j) {
+			MxS[i][j] = FLT_MAX;
+		}
+	}
 #endif
-	float **S = MxS.GetData();
+	// Use Matrix directly
 	for (uint i = 0; i < LA; ++i)
 		{
 		char a = A[i];
 		for (uint j = 0; j < LB; ++j)
 			{
 			char b = B[j];
-			S[i][j] = GetBlosum62Score(a, b);
+			MxS[i][j] = GetBlosum62Score(a, b);
 			}
 		}
 	}
@@ -216,8 +225,8 @@ static void Test2(const string &A, const string &B)
 	uint LA = SIZE(A);
 	uint LB = SIZE(B);
 
-	Mx<float> SMx;
-	Mx<float> DPMx;
+	Matrix<float> SMx;
+	Matrix<float> DPMx;
 	MakeBlosumS(A, B, SMx);
 
 	uint Loi, Loj, ColCount;

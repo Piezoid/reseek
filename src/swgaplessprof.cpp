@@ -1,12 +1,12 @@
 #include "myutils.h"
-#include "mx.h"
+#include "arrays.h"
 #include "alpha.h"
 #include "xdpmem.h"
 
 extern float B62Mf[20][20];
 
 // float GetBlosum62Score(char a, char b);
-float SWGapless(Mx<float> &DPMx, const Mx<float> &SMx, uint LA, uint LB,
+float SWGapless(Matrix<float> &DPMx, const Matrix<float> &SMx, uint LA, uint LB,
   uint &Loi, uint &Loj, uint &ColCount);
 
 static float SWFastGaplessProf(XDPMem &Mem, const float * const *ProfA, uint LA,
@@ -63,15 +63,19 @@ static float SWFastGaplessProf(XDPMem &Mem, const float * const *ProfA, uint LA,
 	}
 
 static void MakeBlosumS(const string &A, const string &B,
-  Mx<float> &MxS)
+  Matrix<float> &MxS)
 	{
 	uint LA = SIZE(A);
 	uint LB = SIZE(B);
-	MxS.Alloc(LA, LB, __FILE__, __LINE__);
+	MxS = Matrix<float>::Allocate(LA, LB);
 #if DEBUG
-	MxS.Assign(FLT_MAX);
+	for (uint i = 0; i < LA; ++i) {
+		for (uint j = 0; j < LB; ++j) {
+			MxS[i][j] = FLT_MAX;
+		}
+	}
 #endif
-	float **S = MxS.GetData();
+	// Use Matrix directly
 	for (uint i = 0; i < LA; ++i)
 		{
 		char a = A[i];
@@ -82,7 +86,7 @@ static void MakeBlosumS(const string &A, const string &B,
 			char b = B[j];
 			byte bi = g_CharToLetterAmino[b];
 			asserta(bi < 20);
-			S[i][j] = B62Mf[ai][bi];
+			MxS[i][j] = B62Mf[ai][bi];
 			}
 		}
 	}
@@ -123,8 +127,8 @@ static void Test2(const string &A, const string &B)
 	uint LA = SIZE(A);
 	uint LB = SIZE(B);
 
-	Mx<float> SMx;
-	Mx<float> DPMx;
+	Matrix<float> SMx;
+	Matrix<float> DPMx;
 	MakeBlosumS(A, B, SMx);
 
 	vector<const float *> ProfA;

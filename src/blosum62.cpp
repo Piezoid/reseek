@@ -1,10 +1,10 @@
 #include "myutils.h"
-#include "mx.h"
+#include "arrays.h"
 #include "alpha.h"
 #include <mutex>
 
-Mx<float> g_SubstMxf;
-float **g_SubstMx;
+Matrix<float> g_SubstMxf;
+float *g_SubstMx;
 
 /***
 This alphabet is the one used by BLAST.
@@ -48,13 +48,19 @@ static float BLOSUM62[24][24] =
 	{  -4,  -1,  -3,   1,   4,   1,  -2,  -3,  -3,   0,   1,  -1,  -3,   0,   3,  -1,   0,   0,  -1,  -3,  -2,  -2,  -1,   4,  },  // Z
 	};
 
-void SetBLOSUM62Mx(Mx<float> &Sf)
+void SetBLOSUM62Mx(Matrix<float> &Sf)
 	{
 	unsigned N = unsigned(strlen(Alphabet));
 
-	Sf.Alloc(256, 256, __FILE__, __LINE__);
-	Sf.Init(0);
-	float **Data = Sf.GetData();
+	Sf = Matrix<float>::Allocate(256, 256);
+	// Initialize to 0
+	for (uint i = 0; i < 256; ++i) {
+		for (uint j = 0; j < 256; ++j) {
+			Sf[i][j] = 0;
+		}
+	}
+	// Use Matrix directly - need to change function signature
+	float *Data = Sf.data();
 
 	for (unsigned i = 0; i < N; ++i)
 		{
@@ -69,17 +75,17 @@ void SetBLOSUM62Mx(Mx<float> &Sf)
 			ui = (byte) toupper(ui);
 			uj = (byte) toupper(uj);
 
-			Data[ui][uj] = v;
-			Data[uj][ui] = v;
+			Sf[ui][uj] = v;
+			Sf[uj][ui] = v;
 
-			Data[ui][lj] = v;
-			Data[uj][li] = v;
+			Sf[ui][lj] = v;
+			Sf[uj][li] = v;
 
-			Data[li][uj] = v;
-			Data[lj][ui] = v;
+			Sf[li][uj] = v;
+			Sf[lj][ui] = v;
 
-			Data[li][lj] = v;
-			Data[lj][li] = v;
+			Sf[li][lj] = v;
+			Sf[lj][li] = v;
 			}
 		}
 	}
@@ -91,7 +97,8 @@ void SetBLOSUM62()
 	if (g_SubstMx == 0)
 		{
 		SetBLOSUM62Mx(g_SubstMxf);
-		g_SubstMx = g_SubstMxf.GetData();
+		// Use Matrix directly - need to change function signature
+		g_SubstMx = g_SubstMxf.data();
 		}
 	Lock.unlock();
 	}
@@ -105,7 +112,7 @@ float GetBlosum62Score(char a, char b)
 		InitDone = true;
 		}
 
-	float Score = g_SubstMx[(byte) a][(byte) b];
+	float Score = g_SubstMx[((byte)a) * 256 + (byte)b];
 	return Score;
 	}
 

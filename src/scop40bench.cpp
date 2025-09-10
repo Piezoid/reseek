@@ -1,7 +1,6 @@
 #include "myutils.h"
 #include "scop40bench.h"
 #include "arrays.h"
-#include "mx.h"
 #include "pdbchain.h"
 #include "xdpmem.h"
 #include "cigar.h"

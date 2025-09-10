@@ -1,5 +1,7 @@
 #pragma once
 
+#include "arrays.h"
+
 #define TRACE	0
 #define DOTONLY	0
 

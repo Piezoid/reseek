@@ -198,7 +198,7 @@ float ViterbiFastMem(XDPMem &Mem, const char *A, uint LA,
 	if (LA*LB > 100*1000*1000)
 		Die("ViterbiFastMem, seqs too long LA=%u, LB=%u", LA, LB);
 
-	extern float **g_SubstMx;
+	extern float *g_SubstMx;
 	void SetBLOSUM62();
 	SetBLOSUM62();
 
@@ -226,7 +226,7 @@ float ViterbiFastMem(XDPMem &Mem, const char *A, uint LA,
 	for (uint i = 0; i < LA; ++i)
 		{
 		const byte a = A[i];
-		const float *MxRow = g_SubstMx[a];
+		const float *MxRow = g_SubstMx + a * 256;
 		float Open = s_TermOpen;
 		float Ext = s_TermExt;
 		float I0 = MINUS_INFINITY;

@@ -3,7 +3,6 @@
 #include "arrays.h"
 #include "chainreader2.h"
 #include "timing.h"
-#include "mx.h"
 
 float GetSelfRevScore(DSSAligner &DA, DSS &D, const PDBChain &Chain,
 					  const Matrix<byte> &Profile,
