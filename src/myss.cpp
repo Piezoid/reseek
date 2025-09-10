@@ -151,9 +151,11 @@ static void Getv(const PDBChain &Chain, uint Pos,
 
 	for (uint m = 0; m < M; ++m)
 		{
-		int i = ivalues[m];
-		int j = jvalues[m];
-		double d = Chain.GetDist(Pos+i, Pos+j);
+		int64 i = (int64)ivalues[m] + Pos;
+		int64 j = (int64)jvalues[m] + Pos;
+		asserta(i >= 0 && i < L);
+		asserta(j >= 0 && j < L);
+		double d = Chain.GetDist((uint) i, (uint) j);
 		v.push_back(d);
 		}
 	asserta(SIZE(v) == M);
