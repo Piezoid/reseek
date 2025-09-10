@@ -74,6 +74,7 @@ After Pass 2:
 	uint *m_NeighborKmers = 0;
 
 public:
+	~MuDex();
 	void FromSeqDB(const SeqDB &Input);
 	const char *KmerToStr(uint Kmer, string &s) const;
 	uint StrToKmer(const string &s) const;

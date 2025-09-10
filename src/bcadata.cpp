@@ -100,14 +100,14 @@ void BCAData::Open(const string &FN)
 
 	uint LabelDataSize = uint(m_LabelDataSize64);
 	asserta(LabelDataSize == m_LabelDataSize64);
-	char *LabelData = myalloc(char, LabelDataSize);
-	ReadStdioFile(m_f, LabelData, LabelDataSize);
+	m_LabelData = myalloc(char, LabelDataSize);
+	ReadStdioFile(m_f, m_LabelData, LabelDataSize);
 	m_Labels.clear();
 	uint n = 0;
-	m_Labels.push_back(LabelData);
+	m_Labels.push_back(m_LabelData);
 	for (uint i = 0; i + 1 < LabelDataSize; ++i)
-		if (LabelData[i] == 0)
-			m_Labels.push_back(LabelData + i + 1);
+		if (m_LabelData[i] == 0)
+			m_Labels.push_back(m_LabelData + i + 1);
 	uint LabelCount = SIZE(m_Labels);
 	if (LabelCount != ChainCount64)
 		Die("Bad BCA file, %u chains %u labels",
@@ -125,6 +125,8 @@ void BCAData::Clear()
 	if (m_f != 0)
 		CloseStdioFile(m_f);
 	m_f = 0;
+	myfree(m_LabelData);
+	m_LabelData = 0;
 	m_Writing = false;
 	m_Reading = false;
 	m_SeqLengthsPos64 = UINT64_MAX;

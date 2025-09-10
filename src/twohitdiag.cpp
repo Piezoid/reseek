@@ -24,7 +24,26 @@ void StrToMuLetters(const string &StrSeq, byte *Letters)
 
 TwoHitDiag::~TwoHitDiag()
 	{
-// Prefer to leak memory for faster exit
+	myfree(m_BusyRdxs);
+	m_BusyRdxs = 0;
+	myfree(m_Sizes);
+	m_Sizes = 0;
+	myfree(m_MaxSeqIdxHiBits);
+	m_MaxSeqIdxHiBits = 0;
+	myfree(m_Data);
+	m_Data = 0;
+	myfree(m_DupeSeqIdxs);
+	m_DupeSeqIdxs = 0;
+	myfree(m_DupeDiags);
+	m_DupeDiags = 0;
+	for (uint Rdx = 0; Rdx < m_NrRdxs; ++Rdx)
+		{
+		if (m_Overflows[Rdx] != 0)
+			myfree(m_Overflows[Rdx]);
+		m_Overflows[Rdx] = 0;
+		}
+	myfree(m_Overflows);
+	m_Overflows = 0;
 	}
 
 TwoHitDiag::TwoHitDiag()
@@ -76,11 +95,10 @@ void TwoHitDiag::Add(uint32_t SeqIdx, uint16_t Diag)
 			{
 			// First overflow
 			assert(OldOverflow == 0);
-			m_Overflows[Rdx] = OldOverflow;
+			m_Overflows[Rdx] = NewOverflow;
 			}
 		else
 			{
-			// Expand overflow buffer
 			memcpy(NewOverflow, OldOverflow, Size*sizeof(uint32_t));
 			myfree(OldOverflow);
 			}

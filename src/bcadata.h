@@ -7,6 +7,7 @@ class BCAData
 	{
 public:
 	vector<string> m_Labels;
+	char *m_LabelData = 0;
 	vector<uint64_t> m_Offsets; // start of IC vector in file
 	vector<uint32_t> m_SeqLengths;
 	string m_FN;
@@ -18,6 +19,7 @@ public:
 	mutable mutex m_ReadLock;
 
 public:
+	~BCAData() { Clear(); }
 	void Clear();
 	void Create(const string &FN);
 	void Open(const string &FN);

@@ -115,11 +115,27 @@ void MuDex::Alloc_Pass2()
 	{
 // 6 bytes for uint32_t:uint16_t (SeqIdx:Pos)
 	const uint64_t Bytes = uint64(m_ItemSize)*m_Size;
+	asserta(m_Data == 0);
 	m_Data = myalloc64(uint8_t, Bytes);
 #if DEBUG_CHECKS
 	m_KmerToCount2.resize(m_DictSize, 0);
 	memset(m_Data, 0xff, Bytes);
 #endif
+	}
+
+
+MuDex::~MuDex() 
+	{
+	myfree(m_RowSizes);
+	m_RowSizes = 0;
+	myfree(m_Finger);
+	m_Finger = 0;
+	myfree(m_Data);
+	m_Data = 0;
+	myfree(m_KmerSelfScores);
+	m_KmerSelfScores = 0;
+	myfree(m_NeighborKmers);
+	m_NeighborKmers = 0;
 	}
 
 void  MuDex::AddSeq_Pass1()

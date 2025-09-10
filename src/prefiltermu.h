@@ -101,6 +101,7 @@ public:
 #endif
 
 public:
+	~PrefilterMu();
 	void SetQDB(const SeqDB &QDB);
 	void Search(FILE *fTsv, uint TSeqIdx, const string &TLabel,
 				const byte *TSeq, uint TL);

@@ -118,6 +118,16 @@ void PrefilterMu::SetQDB(const SeqDB &QDB)
 	m_NrQueriesWithTwoHitDiag = 0;
 	}
 
+PrefilterMu::~PrefilterMu()
+	{
+	myfree(m_QSeqIdxToBestDiagScore);
+	m_QSeqIdxToBestDiagScore = 0;
+	myfree(m_QSeqIdxsWithTwoHitDiag);
+	m_QSeqIdxsWithTwoHitDiag = 0;
+	myfree(m_NeighborKmers);
+	m_NeighborKmers = 0;
+	}
+
 void PrefilterMu::Search_TargetKmers()
 	{
 #if KMER_SORT
