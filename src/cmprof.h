@@ -7,14 +7,14 @@
 class CMProf
 	{
 public:
-	Matrix<double> m_MeanDistMx;
-	Matrix<double> m_StdDevs;
+	SquareMatrix<double> m_MeanDistMx;
+	SquareMatrix<double> m_StdDevs;
 	const SeqDB *m_MSA = 0;
 
 // Training only
 	vector<bool> m_ColIsCore;
 	vector<uint> m_CoreCols;
-	vector<Matrix<double> > m_DistMxVec;
+	vector<SquareMatrix<double> > m_DistMxVec;
 	map<string, uint> m_UngappedSeqToIdx;
 
 
@@ -27,8 +27,8 @@ public:
 	void Clear()
 		{
 		m_ColIsCore.clear();
-		m_MeanDistMx = Matrix<double>();
-		m_StdDevs = Matrix<double>();
+		m_MeanDistMx = SquareMatrix<double>();
+		m_StdDevs = SquareMatrix<double>();
 		m_DistMxVec.clear();
 		}
 	
@@ -38,9 +38,9 @@ public:
 
 	void ToFile(const string &FileName) const;
 	void MxToFile(FILE *f, const string &Name,
-	  const Matrix<double> &Mx) const;
+	  const SquareMatrix<double> &Mx) const;
 	void MxFromFile(FILE *f, string &Name, uint CoreColCount,
-	  Matrix<double> &Mx);
+	  SquareMatrix<double> &Mx);
 	void FromFile(FILE *f);
 	void FromFile(const string &FileName);
 
@@ -54,7 +54,7 @@ public:
 	void FinalizeTrain();
 	bool TrainChain(const PDBChain &Chain);
 	void GetDistMx(const PDBChain &Chain, const vector<uint> &PosVec,
-	  Matrix<double> &DistMx);
+	  SquareMatrix<double> &DistMx);
 	void GetMeanStdDev(uint i, uint j,
 	  double &Mean, double &StdDev) const;
 	};

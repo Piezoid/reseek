@@ -39,7 +39,7 @@ public:
 	float m_OmegaFwd = FLT_MAX;
 	string m_MKFPatternStr = "";
 	string m_MuPrefPatternStr = "";
-	Matrix<float>* m_ScoreMxs = nullptr;
+	SquareMatrix<float>* m_ScoreMxs = nullptr;
 	bool m_OwnScoreMxs = false;
 
 	bool m_UsePara = true;

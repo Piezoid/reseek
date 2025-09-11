@@ -65,7 +65,7 @@ public:
 //  Local copy of the substitution matrix
 //  for thread-safe access
 ////////////////////////////////////////////
-	Matrix<int8_t> m_SubstMatrix;
+	SquareMatrix<int8_t> m_SubstMatrix;
 
 ///////////////////////////////////////////////////
 // Accumulating results for current target sequence

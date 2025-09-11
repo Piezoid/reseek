@@ -346,7 +346,7 @@ uint PDBChain::GetSeqLength() const
 
 void PDBChain::GetXFormChain_tR(
   const vector<float> &t,
-  const Matrix<float> &R,
+  const SquareMatrix<float> &R,
   PDBChain &XChain) const
 	{
 	XChain.Clear();
@@ -377,7 +377,7 @@ void PDBChain::GetXFormChain_tR(
 
 void PDBChain::GetXFormChain_tR(
   const vector<double> &t,
-  const Matrix<double> &R,
+  const SquareMatrix<double> &R,
   PDBChain &XChain) const
 	{
 	XChain.Clear();

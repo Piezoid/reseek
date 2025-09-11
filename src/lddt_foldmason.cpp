@@ -35,7 +35,7 @@ double DALIScorer::GetLDDTColScore_foldmason(uint col) const
 			continue;
 		asserta(seq_idxi < SIZE(m_SeqIdxToChainIdx));
 		uint chain_idxi = m_SeqIdxToChainIdx[seq_idxi];
-		const Matrix<double> &dist_mxi = m_DistMxVec[chain_idxi];
+		const SquareMatrix<double> &dist_mxi = m_DistMxVec[chain_idxi];
 		for (uint seq_idxj = seq_idxi+1; seq_idxj < nr_seqs; ++seq_idxj)
 			{
 			uint posj = m_ColToPosVec[seq_idxj][col];
@@ -45,7 +45,7 @@ double DALIScorer::GetLDDTColScore_foldmason(uint col) const
 			asserta(seq_idxj < SIZE(m_SeqIdxToChainIdx));
 			uint chain_idxj = m_SeqIdxToChainIdx[seq_idxj];
 			nr_seq_pairs += 1;
-			const Matrix<double> &dist_mxj = m_DistMxVec[chain_idxj];
+			const SquareMatrix<double> &dist_mxj = m_DistMxVec[chain_idxj];
 			double pair_score = 0;
 
 			uint nr_pairs = 0;

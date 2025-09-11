@@ -262,13 +262,13 @@ void DSSParams::InitScoreMxs()
 	if (m_ScoreMxs != nullptr)
 		return;
 	uint FeatureCount = GetFeatureCount();
-	m_ScoreMxs = new Matrix<float>[FEATURE_COUNT];
+	m_ScoreMxs = new SquareMatrix<float>[FEATURE_COUNT];
 	for (uint Idx = 0; Idx < FeatureCount; ++Idx)
 		{
 		FEATURE F = m_Features[Idx];
 		asserta(uint(F) < FEATURE_COUNT);
 		uint AS = g_AlphaSizes2[F];
-		m_ScoreMxs[F] = Matrix<float>::Allocate(AS, AS);
+		m_ScoreMxs[F] = SquareMatrix<float>::Allocate(AS);
 #if DEBUG
 		for (uint Letter1 = 0; Letter1 < AS; ++Letter1)
 			for (uint Letter2 = 0; Letter2 < AS; ++Letter2)
@@ -337,11 +337,11 @@ void DSSParams::ApplyWeights()
 			Die("Feature %s not supported", FeatureToStr(F));
 		
 		if (m_ScoreMxs[F].Rows() != AS || m_ScoreMxs[F].Cols() != AS) {
-			m_ScoreMxs[F].~Matrix();
-			m_ScoreMxs[F] = Matrix<float>::Allocate(AS, AS);
+			m_ScoreMxs[F].~SquareMatrix();
+			m_ScoreMxs[F] = SquareMatrix<float>::Allocate(AS);
 		}
 
-		Matrix<float> &SMx = m_ScoreMxs[F];
+		SquareMatrix<float> &SMx = m_ScoreMxs[F];
 
 		for (uint Letter1 = 0; Letter1 < AS; ++Letter1)
 			{

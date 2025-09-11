@@ -24,35 +24,35 @@ const uint PALMCOREM = 150;
 extern const uint MotifLVec[3];
 
 void LogVec(const string &Msg, const vector<double> &v);
-void LogMx(const string &Msg, const Matrix<double> &Mx);
-double GetMxDeterminant(const Matrix<double> &Mx);
-void InvertMx(const Matrix<double> &Mx,
-  Matrix<double> &InvMx);
-void MulMxVec(const Matrix<double> &Mx,
+void LogMx(const string &Msg, const SquareMatrix<double> &Mx);
+double GetMxDeterminant(const SquareMatrix<double> &Mx);
+void InvertMx(const SquareMatrix<double> &Mx,
+  SquareMatrix<double> &InvMx);
+void MulMxVec(const SquareMatrix<double> &Mx,
   const vector<double> &Vec,
   vector<double> &Result);
 void MulMx(
-  const Matrix<double> &A,
-  const Matrix<double> &B,
-  Matrix<double> &Prod);
-void GetBasisR(const Matrix<double> &Basis,
-  Matrix<double> &R);
-void LogMx(const string &Msg, const Matrix<double> &Mx);
-void RotateMx(const Matrix<double> &Mx,
-  uint Axis, double Theta, Matrix<double> &RotatedMx);
+  const SquareMatrix<double> &A,
+  const SquareMatrix<double> &B,
+  SquareMatrix<double> &Prod);
+void GetBasisR(const SquareMatrix<double> &Basis,
+  SquareMatrix<double> &R);
+void LogMx(const string &Msg, const SquareMatrix<double> &Mx);
+void RotateMx(const SquareMatrix<double> &Mx,
+  uint Axis, double Theta, SquareMatrix<double> &RotatedMx);
 void CrossProduct(
   const vector<double> &a,
   const vector<double> &b,
   vector<double> &Prod);
 void GetTriForm(
-  Matrix<double> &MotifCoords,
+  SquareMatrix<double> &MotifCoords,
   vector<double> &t,
-  Matrix<double> &R);
+  SquareMatrix<double> &R);
 
-void GetTriangleCentroid(const Matrix<double> &MotifCoords,
+void GetTriangleCentroid(const SquareMatrix<double> &MotifCoords,
   vector<double> &CentroidCoords);
-void GetTriangleBasis(const Matrix<double> &MotifCoords,
-  vector<double> &CentroidCoords, Matrix<double> &Basis);
+void GetTriangleBasis(const SquareMatrix<double> &MotifCoords,
+  vector<double> &CentroidCoords, SquareMatrix<double> &Basis);
 
 static inline uint GetOtherAxis_i(uint Axis) { return (Axis+1)%3;  }
 static inline uint GetOtherAxis_j(uint Axis) { return (Axis+2)%3;  }
@@ -60,9 +60,9 @@ static inline uint GetOtherAxis_j(uint Axis) { return (Axis+2)%3;  }
 static inline void Resize3(vector<double> &v) { v.resize(3); }
 static inline void Resize3(vector<float> &v) { v.resize(3); }
 
-static inline Matrix<double> Allocate3x3()
+static inline SquareMatrix<double> Allocate3x3()
 	{
-	return Matrix<double>::Allocate(3, 3);
+	return SquareMatrix<double>::Allocate(3);
 	}
 
 static inline void MulVecScalar(const vector<double> &v,
@@ -126,7 +126,7 @@ static inline float GetDist3D(
 	return d;
 	}
 
-static inline double GetDist2_Mxij(const Matrix<double> &Mx,
+static inline double GetDist2_Mxij(const SquareMatrix<double> &Mx,
   uint i, uint j)
 	{
 	double xi = Mx[i][X];
@@ -145,7 +145,7 @@ static inline double GetDist2_Mxij(const Matrix<double> &Mx,
 	return d2;
 	}
 
-static inline double GetDist_Mxij(const Matrix<double> &Mx,
+static inline double GetDist_Mxij(const SquareMatrix<double> &Mx,
   uint i, uint j)
 	{
 	double xi = Mx[i][X];
@@ -191,7 +191,7 @@ static inline void NormalizeVec(vector<double> &v)
 	assert(feq(GetMod_Vec(v), 1));
 	}
 
-static inline double GetMod_Mxi(const Matrix<double> &Mx,
+static inline double GetMod_Mxi(const SquareMatrix<double> &Mx,
   uint i)
 	{
 	double x = Mx[i][X];
@@ -262,7 +262,7 @@ static inline double GetTheta_Vecs(const vector<double> &vi,
 	return theta;
 	}
 
-static inline double GetTheta_Mxij(const Matrix<double> &Mx,
+static inline double GetTheta_Mxij(const SquareMatrix<double> &Mx,
   uint i, uint j)
 	{
 	vector<double> vi(3), vj(3);
@@ -287,34 +287,34 @@ static inline double degrees_0_to_360(double Radians)
 	return Deg;
 	}
 
-void GetIdentityMx(Matrix<double> &Mx);
+void GetIdentityMx(SquareMatrix<double> &Mx);
 
 void XFormPt(
   const vector<double> &Pt,
   const vector<double> &t,
-  const Matrix<double> &R,
+  const SquareMatrix<double> &R,
   vector<double> &XPt);
 
 void XFormMx(
-  const Matrix<double> &Mx,
+  const SquareMatrix<double> &Mx,
   const vector<double> &t,
-  const Matrix<double> &R,
-  Matrix<double> &XMx);
+  const SquareMatrix<double> &R,
+  SquareMatrix<double> &XMx);
 
 void XFormPt(
   const vector<float> &Pt,
   const vector<float> &t,
-  const Matrix<float> &R,
+  const SquareMatrix<float> &R,
   vector<float> &XPt);
 
 void XFormMx(
-  const Matrix<float> &Mx,
+  const SquareMatrix<float> &Mx,
   const vector<float> &t,
-  const Matrix<float> &R,
-  Matrix<float> &XMx);
+  const SquareMatrix<float> &R,
+  SquareMatrix<float> &XMx);
 
 #if DEBUG
-static void AssertCanonicalUnitBasis(const Matrix<double> &Basis)
+static void AssertCanonicalUnitBasis(const SquareMatrix<double> &Basis)
 	{
 	assert(Basis.Rows() == 3);
 	assert(Basis.Cols() == 3);
@@ -335,7 +335,7 @@ static void AssertCanonicalUnitBasis(const Matrix<double> &Basis)
 #define AssertCanonicalUnitBasis(x)	0
 #endif // DEBUG
 
-static void AssertUnitBasisA(const Matrix<double> &Basis)
+static void AssertUnitBasisA(const SquareMatrix<double> &Basis)
 	{
 // check length of basis vectors is 1 and angles are PI/2
 	for (uint k = 0; k < 3; ++k)
@@ -352,7 +352,7 @@ static void AssertUnitBasisA(const Matrix<double> &Basis)
 	}
 
 #if DEBUG
-static void AssertUnitBasis(const Matrix<double> &Basis)
+static void AssertUnitBasis(const SquareMatrix<double> &Basis)
 	{
 // check length of basis vectors is 1 and angles are PI/2
 	for (uint k = 0; k < 3; ++k)
@@ -372,8 +372,8 @@ static void AssertUnitBasis(const Matrix<double> &Basis)
 #endif // DEBUG
 
 #if DEBUG
-static void AssertSameLengths(const Matrix<double> &Mx1,
-  const Matrix<double> &Mx2)
+static void AssertSameLengths(const SquareMatrix<double> &Mx1,
+  const SquareMatrix<double> &Mx2)
 	{
 	for (uint k = 0; k < 3; ++k)
 		{
@@ -387,8 +387,8 @@ static void AssertSameLengths(const Matrix<double> &Mx1,
 #endif // DEBUG
 
 #if DEBUG
-static void AssertSameAngles(const Matrix<double> &Mx1,
-  const Matrix<double> &Mx2)
+static void AssertSameAngles(const SquareMatrix<double> &Mx1,
+  const SquareMatrix<double> &Mx2)
 	{
 	for (uint i = 0; i < 3; ++i)
 		{
@@ -405,7 +405,7 @@ static void AssertSameAngles(const Matrix<double> &Mx1,
 #endif // DEBUG
 
 #if DEBUG
-static void AssertMx3D(const Matrix<double> &Mx)
+static void AssertMx3D(const SquareMatrix<double> &Mx)
 	{
 	asserta(Mx.Rows() == 3);
 	asserta(Mx.Cols() == 3);

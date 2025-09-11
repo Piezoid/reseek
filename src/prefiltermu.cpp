@@ -316,7 +316,7 @@ void PrefilterMu::Reset()
 	{
 	// Initialize substitution matrix from global array
 	if (m_SubstMatrix.Rows() == 0) {
-		m_SubstMatrix = Matrix<int8_t>::Allocate(36, 36);
+		m_SubstMatrix = SquareMatrix<int8_t>::Allocate(36);
 		for (uint i = 0; i < 36; ++i) {
 			for (uint j = 0; j < 36; ++j) {
 				m_SubstMatrix[i][j] = Mu_S_ij_i8[i][j];

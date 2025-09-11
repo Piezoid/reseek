@@ -20,8 +20,8 @@ double DALIScorer::GetDALIScore_OffDiag(uint ChainIdx1, uint ChainIdx2,
 	const uint Lali = SIZE(Pos1s);
 	asserta(SIZE(Pos2s) == Lali);
 
-	const Matrix<double> &DistMx1 = GetDistMx(ChainIdx1);
-	const Matrix<double> &DistMx2 = GetDistMx(ChainIdx2);
+	const SquareMatrix<double> &DistMx1 = GetDistMx(ChainIdx1);
+	const SquareMatrix<double> &DistMx2 = GetDistMx(ChainIdx2);
 
 	double Sum = 0;
 	for (uint i = 0; i < Lali; ++i)

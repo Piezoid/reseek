@@ -13,10 +13,10 @@ double GetNormal(double Mu, double Sigma, double x)
 	}
 
 void CMProf::GetDistMx(const PDBChain &Chain, const vector<uint> &PosVec,
-  Matrix<double> &DistMx)
+  SquareMatrix<double> &DistMx)
 	{
 	const uint N = SIZE(PosVec);
-	DistMx = Matrix<double>::Allocate(N, N);
+	DistMx = SquareMatrix<double>::Allocate(N);
 	
 	// Initialize with DBL_MAX
 	for (uint i = 0; i < N; ++i)
@@ -42,7 +42,7 @@ void CMProf::GetDistMx(const PDBChain &Chain, const vector<uint> &PosVec,
 	}
 
 void CMProf::MxToFile(FILE *f, const string &Name,
-  const Matrix<double> &Mx) const
+  const SquareMatrix<double> &Mx) const
 	{
 	if (f == 0)
 		return;
@@ -82,9 +82,9 @@ void CMProf::ToFile(const string &FileName) const
 	}
 
 void CMProf::MxFromFile(FILE *f, string &Name, uint CoreColCount,
-  Matrix<double> &Mx)
+  SquareMatrix<double> &Mx)
 	{
-	Mx = Matrix<double>::Allocate(CoreColCount, CoreColCount);
+	Mx = SquareMatrix<double>::Allocate(CoreColCount);
 	
 	// Initialize with DBL_MAX
 	for (uint i = 0; i < CoreColCount; ++i)
@@ -171,7 +171,7 @@ bool CMProf::TrainChain(const PDBChain &Q)
 				PosVec.push_back(Pos++);
 			}
 		}
-	Matrix<double> DistMx;
+	SquareMatrix<double> DistMx;
 	GetDistMx(Q, PosVec, DistMx);
 
 	m_DistMxVec.push_back(std::move(DistMx));
@@ -182,8 +182,8 @@ void CMProf::FinalizeTrain()
 	{
 	const uint CoreColCount = GetCoreColCount();
 
-	m_MeanDistMx = Matrix<double>::Allocate(CoreColCount, CoreColCount);
-	m_StdDevs = Matrix<double>::Allocate(CoreColCount, CoreColCount);
+	m_MeanDistMx = SquareMatrix<double>::Allocate(CoreColCount);
+	m_StdDevs = SquareMatrix<double>::Allocate(CoreColCount);
 	
 	// Initialize with DBL_MAX
 	for (uint i = 0; i < CoreColCount; ++i)

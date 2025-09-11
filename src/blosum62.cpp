@@ -3,7 +3,7 @@
 #include "alpha.h"
 #include <mutex>
 
-Matrix<float> g_SubstMxf;
+SquareMatrix<float> g_SubstMxf;
 float *g_SubstMx;
 
 /***
@@ -48,11 +48,11 @@ static float BLOSUM62[24][24] =
 	{  -4,  -1,  -3,   1,   4,   1,  -2,  -3,  -3,   0,   1,  -1,  -3,   0,   3,  -1,   0,   0,  -1,  -3,  -2,  -2,  -1,   4,  },  // Z
 	};
 
-void SetBLOSUM62Mx(Matrix<float> &Sf)
+void SetBLOSUM62Mx(SquareMatrix<float> &Sf)
 	{
 	unsigned N = unsigned(strlen(Alphabet));
 
-	Sf = Matrix<float>::Allocate(256, 256);
+	Sf = SquareMatrix<float>::Allocate(256);
 	// Initialize to 0
 	for (uint i = 0; i < 256; ++i) {
 		for (uint j = 0; j < 256; ++j) {

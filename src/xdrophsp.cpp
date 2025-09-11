@@ -19,7 +19,7 @@ float DSSAligner::SubstScore(uint PosA, uint PosB)
 		{
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
-		const Matrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
+		const SquareMatrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
 		const span<const byte> ProfRowA = ProfileA[FeatureIdx];
 		const span<const byte> ProfRowB = ProfileB[FeatureIdx];
 		byte ia = ProfRowA[PosA];

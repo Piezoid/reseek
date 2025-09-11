@@ -17,8 +17,8 @@ char GetLDDTMuWSymbol(double LDDTMuW)
 	return '@';
 	}
 
-double DALIScorer::GetLDDTScoreWindow(const Matrix<double> &DistMx1,
-  const Matrix<double> &DistMx2, uint w) const
+double DALIScorer::GetLDDTScoreWindow(const SquareMatrix<double> &DistMx1,
+  const SquareMatrix<double> &DistMx2, uint w) const
 	{
 	const uint nr_thresholds = SIZE(m_LDDT_thresholds);
 	const uint n = 2*w + 1;
@@ -68,15 +68,15 @@ double DALIScorer::GetLDDTScoreWindow(const Matrix<double> &DistMx1,
 	}
 
 void DALIScorer::GetDistMxWindow(uint SeqIdx, uint Pos, uint w,
-  Matrix<double> &Mx) const
+  SquareMatrix<double> &Mx) const
 	{
 	asserta(SeqIdx < SIZE(m_SeqIdxToChainIdx));
 	uint ChainId = m_SeqIdxToChainIdx[SeqIdx];
-	const Matrix<double> &DistMx = m_DistMxVec[ChainId];
+	const SquareMatrix<double> &DistMx = m_DistMxVec[ChainId];
 	const uint L = DistMx.Rows();
 
 	uint n = 2*w + 1;
-	Mx = Matrix<double>::Allocate(n, n);
+	Mx = SquareMatrix<double>::Allocate(n);
 	
 	// Initialize with DBL_MAX
 	for (uint i = 0; i < n; ++i)
@@ -108,7 +108,7 @@ double DALIScorer::GetLDDTMuW1(uint QuerySeqIdx, uint Col, uint w) const
 	asserta(QuerySeqIdx < SIZE(m_ColToPosVec));
 	asserta(Col < SIZE(m_ColToPosVec[QuerySeqIdx]));
 	uint QueryPos = m_ColToPosVec[QuerySeqIdx][Col];
-	Matrix<double> QueryMx;
+	SquareMatrix<double> QueryMx;
 	GetDistMxWindow(QuerySeqIdx, QueryPos, w, QueryMx);
 	asserta(QuerySeqIdx < SIZE(m_SeqIdxToChainIdx));
 	uint QueryChainIdx = m_SeqIdxToChainIdx[QuerySeqIdx];
@@ -125,7 +125,7 @@ double DALIScorer::GetLDDTMuW1(uint QuerySeqIdx, uint Col, uint w) const
 		if (posi == UINT_MAX)
 			continue;
 
-		Matrix<double> Mx;
+		SquareMatrix<double> Mx;
 		GetDistMxWindow(seq_idxi, posi, w, Mx);
 		double score = GetLDDTScoreWindow(QueryMx, Mx, w);
 		if (score == DBL_MAX)

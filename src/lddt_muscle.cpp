@@ -41,8 +41,8 @@ double DALIScorer::GetLDDTChainPair_muscle(uint ChainIdx1, uint ChainIdx2,
 	if (nr_cols == 0)
 		return 0;
 
-	const Matrix<double> &DistMx1 = GetDistMx(ChainIdx1);
-	const Matrix<double> &DistMx2 = GetDistMx(ChainIdx2);
+	const SquareMatrix<double> &DistMx1 = GetDistMx(ChainIdx1);
+	const SquareMatrix<double> &DistMx2 = GetDistMx(ChainIdx2);
 
 	const uint nr_thresholds = SIZE(m_LDDT_thresholds);
 	asserta(SIZE(col_to_pos2s) == nr_cols);

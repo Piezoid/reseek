@@ -331,7 +331,7 @@ float DSSAligner::GetScorePosPair(const Matrix<byte> &ProfileA,
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
 		//float **ScoreMx = g_ScoreMxs2[F];
-		const Matrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
+		const SquareMatrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
 		const span<const byte> ProfRowA = ProfileA[FeatureIdx];
 		const span<const byte> ProfRowB = ProfileB[FeatureIdx];
 		byte ia = ProfRowA[PosA];
@@ -371,7 +371,7 @@ void DSSAligner::SetSMx_QRev()
 // Special case first feature because = not += and
 	FEATURE F0 = m_Params->m_Features[0];
 	uint AlphaSize0 = g_AlphaSizes2[F0];
-	const Matrix<float> &ScoreMx0 = m_Params->m_ScoreMxs[F0];
+	const SquareMatrix<float> &ScoreMx0 = m_Params->m_ScoreMxs[F0];
 	//const vector<byte> &ProfRowA = (*m_ProfileA)[0];
 	for (uint PosA = 0; PosA < LA; ++PosA)
 		{
@@ -392,7 +392,7 @@ void DSSAligner::SetSMx_QRev()
 		{
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
-		const Matrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
+		const SquareMatrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
 		//const vector<byte> &ProfRowA = (*m_ProfileA)[FeatureIdx];
 		for (uint PosA = 0; PosA < LA; ++PosA)
 			{
@@ -498,7 +498,7 @@ float DSSAligner::GetMegaHSPScore(uint Lo_i, uint Lo_j, uint Len)
 // Special case first feature because = not += and
 	FEATURE F0 = m_Params->m_Features[0];
 	uint AlphaSize0 = g_AlphaSizes2[F0];
-	const Matrix<float> &ScoreMx0 = m_Params->m_ScoreMxs[F0];
+	const SquareMatrix<float> &ScoreMx0 = m_Params->m_ScoreMxs[F0];
 	const span<const byte> ProfRowA = ProfileA[0];
 	const span<const byte> ProfRowB = ProfileB[0];
 	float Total = 0;
@@ -506,7 +506,7 @@ float DSSAligner::GetMegaHSPScore(uint Lo_i, uint Lo_j, uint Len)
 		{
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
-		const Matrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
+		const SquareMatrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
 		const span<const byte> ProfRowA = ProfileA[FeatureIdx];
 		const span<const byte> ProfRowB = ProfileB[FeatureIdx];
 		for (uint k = 0; k < Len; ++k)
@@ -532,7 +532,7 @@ using Block = std::array<byte, BLOCK_SIZE>;
 
 struct FeatureProfile {
 	const uint m_AlphaSize;
-	const Matrix<float> &m_ScoreMx;
+	const SquareMatrix<float> &m_ScoreMx;
 	const span<const byte> m_ProfRow;
 };
 
