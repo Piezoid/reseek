@@ -6,25 +6,24 @@ template<class T> class span
     {
 private:
     T *m_data;
-    uint m_size;
+    size_t m_size;
 
 public:
-    span(T *data, uint size) : m_data(data), m_size(size) {}
+    span(T *data, size_t size) : m_data(data), m_size(size) {}
     T *data() const { return m_data; }
-    uint size() const { return m_size; }
-    T &operator[](uint index) const { return m_data[(size_t) index]; }
+    size_t size() const { return m_size; }
+    T &operator[](size_t index) const { return m_data[(size_t) index]; }
     };
 
 
 template<class T> class Matrix {
     private:
     T *m_data;
-    uint m_rows;
-    uint m_cols;
+    size_t m_rows;
+    size_t m_cols;
     bool m_OwnData = false;
 
 public:
-    // Default constructor - creates empty matrix
     Matrix() : m_data(nullptr), m_rows(0), m_cols(0), m_OwnData(false) {}
     
     Matrix(T *data, uint rows, uint cols, bool ownData) : m_data(data), m_rows(rows), m_cols(cols), m_OwnData(ownData) {}
