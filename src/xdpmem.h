@@ -46,6 +46,7 @@ public:
 
 	void Clear()
 		{
+		m_TBBit = {};
 		myfree(m_Buffer1);
 		myfree(m_Buffer2);
 		myfree(m_Buffer1_Int);
