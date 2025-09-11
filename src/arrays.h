@@ -85,44 +85,66 @@ public:
     ~Matrix() { if (m_OwnData) myfree(m_data); }
     };
 
-// Conversion function from vector<vector<byte>> to Matrix<byte>
-template<class T>
-Matrix<T> VectorToMatrix(const vector<vector<T>> &vec) {
-    if (vec.empty()) {
-        return Matrix<T>();
-    }
-    
-    uint rows = vec.size();
-    uint cols = vec[0].size();
-    T *data = myalloc(T, rows * cols);
-    
-    for (uint i = 0; i < rows; ++i) {
-        for (uint j = 0; j < cols; ++j) {
-            asserta(vec[i].size() == cols);
-            data[i * cols + j] = vec[i][j];
-        }
-    }
-    
-    return Matrix<T>::FromOwnedData(data, rows, cols);
-}
+template<class T> class SquareMatrix {
+        private:
+        T *m_data;
+        size_t m_size;
+        bool m_OwnData = false;
 
-// Conversion function from Matrix<byte> to vector<vector<byte>>
-template<class T>
-vector<vector<T>> MatrixToVector(const Matrix<T> &matrix) {
-    vector<vector<T>> result;
-    if (matrix.Rows() == 0 || matrix.Cols() == 0) {
-        return result;
-    }
-    
-    result.resize(matrix.Rows());
-    for (uint i = 0; i < matrix.Rows(); ++i) {
-        result[i].resize(matrix.Cols());
-        for (uint j = 0; j < matrix.Cols(); ++j) {
-            result[i][j] = matrix[i][j];
-        }
-    }
-    
-    return result;
-}
+    public:
+        SquareMatrix() : m_data(nullptr), m_size(0), m_OwnData(false) {}
 
+        SquareMatrix(T *data, uint size, bool ownData) : m_data(data), m_size(size), m_OwnData(ownData) {}
 
+        SquareMatrix(const SquareMatrix& other) = delete;
+
+        //Matrix(const Matrix& other) : m_data(other.m_data), m_rows(other.m_rows), m_cols(other.m_cols), m_OwnData(false) {}
+        SquareMatrix(SquareMatrix&& other) noexcept : m_data(other.m_data), m_size(other.m_size), m_OwnData(other.m_OwnData)
+            {
+            other.m_data = nullptr;
+            other.m_size = 0;
+            other.m_OwnData = false;
+            }
+
+        SquareMatrix& operator=(const SquareMatrix& other) = delete;
+        // Matrix& operator=(const Matrix& other)
+        //     {
+        //     if (this != &other)
+        //         {
+        //         if (m_OwnData) myfree(m_data);
+        //         m_data = other.m_data;
+        //         m_rows = other.m_rows;
+        //         m_cols = other.m_cols;
+        //         m_OwnData = false;
+        //         }
+        //     return *this;
+        //     }
+
+        SquareMatrix& operator=(SquareMatrix&& other) noexcept
+            {
+            if (this != &other)
+                {
+                if (m_OwnData) myfree(m_data);
+                m_data = other.m_data;
+                m_size = other.m_size;
+                m_OwnData = other.m_OwnData;
+                other.m_data = nullptr;
+                other.m_size = 0;
+                other.m_OwnData = false;
+                }
+            return *this;
+            }
+
+        static SquareMatrix<T> Allocate(uint size) { return SquareMatrix<T>(myalloc64(T, size*size), size, true); }
+        static SquareMatrix<T> FromOwnedData(T *data, uint size) { return SquareMatrix<T>(data, size, true); }
+        static SquareMatrix<T> FromSharedData(T *data, uint size) { return SquareMatrix<T>(data, size, false); }
+
+        T *data() const { return m_data; }
+        uint Rows() const { return m_size; }
+        uint Cols() const { return m_size; }
+
+        span<T> operator[](uint row) { return span<T>(m_data + (size_t) row * (size_t) m_size, m_size); }
+        span<const T> operator[](uint row) const { return span<const T>(m_data + (size_t) row * (size_t) m_size, m_size); }
+
+        ~SquareMatrix() { if (m_OwnData) myfree(m_data); }
+    };
