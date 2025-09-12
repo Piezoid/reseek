@@ -526,6 +526,141 @@ float DSSAligner::GetMegaHSPScore(uint Lo_i, uint Lo_j, uint Len)
 	return Total;
 	}
 
+constexpr uint BLOCK_BITS = 1;
+constexpr uint BLOCK_SIZE = 1 << BLOCK_BITS;
+using Block = std::array<byte, BLOCK_SIZE>;
+
+struct FeatureProfile {
+	const uint m_AlphaSize;
+	const Matrix<float> &m_ScoreMx;
+	const span<const byte> m_ProfRow;
+};
+
+__attribute__((always_inline))
+static inline void SetSMx_NoRev_Row(
+				Matrix<float> &Sim,
+					  const Matrix<byte> &ProfileA,
+					  uint PosA, uint LB,
+					  const vector<FeatureProfile> &FeatureProfiles,
+					  const vector<Block> &TransposedProfileB) {
+	// Copy the scores of all features for the letter ia
+	const uint FeatureCount = SIZE(FeatureProfiles);
+	float ConcatScores[256];
+	uint j = 0;
+	for (uint FeatureIdx = 0; FeatureIdx < FeatureCount; ++FeatureIdx) {
+		const auto& prof = FeatureProfiles[FeatureIdx];
+		uint AlphaSize = prof.m_AlphaSize;
+		byte ia = ProfileA[FeatureIdx][PosA];
+		assert(ia < AlphaSize);
+		span<const float> ScoreMxRow = prof.m_ScoreMx[ia];
+		for (uint i = 0; i < AlphaSize; ++i, ++j) {
+			ConcatScores[j] = ScoreMxRow[i];
+		}
+	}
+
+	span<float> SimRow = Sim[PosA];
+
+	const uint block_count = LB >> BLOCK_BITS;
+	const std::array<byte, BLOCK_SIZE>* block_ptr = TransposedProfileB.data();
+#if 1
+	for (uint BlockB = 0; BlockB < block_count; ++BlockB) {
+		float block[BLOCK_SIZE];
+		const uint block_offset = BlockB << BLOCK_BITS;
+		#pragma omp simd
+		for (uint i = 0; i < BLOCK_SIZE; ++i) {
+			block[i] = 0;
+		}
+		for (uint FeatureIdx = 0; FeatureIdx < FeatureCount; ++FeatureIdx) {
+			const Block& ProfileBlock = *block_ptr;
+			#pragma omp simd
+			for (uint i = 0; i < BLOCK_SIZE; ++i) {
+				block[i] += ConcatScores[ProfileBlock[i]];
+			}
+			block_ptr++;
+		}
+
+		#pragma omp simd
+		for (uint i = 0; i < BLOCK_SIZE; ++i) {
+			SimRow[block_offset + i] = block[i];
+		}
+	}
+
+#else
+	for (uint BlockB = 0; BlockB < block_count; ++BlockB) {
+		// Align the temporary block to a 64-byte boundary for efficient AVX512 loads/stores.
+        alignas(64) float block[BLOCK_SIZE];
+		const uint block_offset = BlockB << BLOCK_BITS;
+
+		// Initialize block to zeros using AVX512
+		_mm512_store_ps(block, _mm512_setzero_ps());
+
+		for (uint FeatureIdx = 0; FeatureIdx < FeatureCount; ++FeatureIdx) {
+			const Block& ProfileBlock = *block_ptr;
+
+            // --- Vectorized replacement for the inner loop ---
+
+            // 1. Load the 16 byte-sized indices from ProfileBlock.
+            //    This fits into a 128-bit register (__m128i).
+            const __m128i v_indices_8bit = _mm_loadu_si128(reinterpret_cast<const __m128i*>(ProfileBlock.data()));
+
+            // 2. Zero-extend the 8-bit unsigned indices to 32-bit integers.
+            //    This is necessary because gather instructions operate on 32-bit or 64-bit indices.
+            //    The result is a 512-bit register (__m512i) holding 16x 32-bit indices.
+            const __m512i v_indices_32bit = _mm512_cvtepu8_epi32(v_indices_8bit);
+
+            // 3. Gather 16 float values from ConcatScores using the 32-bit indices.
+            //    The last argument '4' is the scale factor (sizeof(float)).
+            const __m512 v_gathered_scores = _mm512_i32gather_ps(v_indices_32bit, ConcatScores, 4);
+
+            // 4. Load the current accumulated values from our temporary `block`.
+            const __m512 v_current_block = _mm512_load_ps(block);
+
+            // 5. Add the gathered scores to the current block values.
+            const __m512 v_new_block = _mm512_add_ps(v_current_block, v_gathered_scores);
+
+            // 6. Store the result back into the temporary `block`.
+            _mm512_store_ps(block, v_new_block);
+
+			block_ptr++;
+		}
+
+		// Store the final calculated block into the destination SimRow.
+        // Use an unaligned store as SimRow[block_offset] is not guaranteed to be aligned.
+		_mm512_storeu_ps(&SimRow[block_offset], _mm512_load_ps(block));
+	}
+#endif
+
+
+	const uint tail_start = block_count << BLOCK_BITS;
+
+	uint concat_index = 0;
+	const span<const byte> ProfRowB = FeatureProfiles[0].m_ProfRow;
+	uint AlphaSize = FeatureProfiles[0].m_AlphaSize;
+	for (uint PosB = tail_start; PosB < LB; ++PosB) {
+		byte ib = ProfRowB[PosB];
+		assert(ib < AlphaSize);
+		float score = ConcatScores[concat_index + ib];
+		SimRow[PosB] = score;
+	}
+	concat_index += AlphaSize;
+
+
+	for (uint FeatureIdx = 1; FeatureIdx < FeatureCount; ++FeatureIdx) {
+		const auto& prof = FeatureProfiles[FeatureIdx];
+		uint AlphaSize = prof.m_AlphaSize;
+		for (uint PosB = tail_start; PosB < LB; ++PosB) {
+			byte ib = prof.m_ProfRow[PosB];
+			assert(ib < AlphaSize);
+			float score = ConcatScores[concat_index + ib];
+			SimRow[PosB] += score;
+		}
+		concat_index += AlphaSize;
+	}
+}
+
+
+
+__attribute__((hot))
 void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 					  const Matrix<byte> &ProfileA,
 					  const Matrix<byte> &ProfileB)
@@ -547,54 +682,50 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 	asserta(ProfileA.Rows() == FeatureCount);
 	asserta(ProfileB.Rows() == FeatureCount);
 
-// Special case first feature because = not += and
-	FEATURE F0 = m_Params->m_Features[0];
-	uint AlphaSize0 = g_AlphaSizes2[F0];
-	const Matrix<float> &ScoreMx0 = m_Params->m_ScoreMxs[F0];
-	const span<const byte> ProfRowA = ProfileA[0];
-	const span<const byte> ProfRowB = ProfileB[0];
-	for (uint PosA = 0; PosA < LA; ++PosA)
-		{
-		byte ia = ProfRowA[PosA];
-		span<float> SimRow = m_SMx[PosA];
-		assert(ia < AlphaSize0);
-		span<const float> ScoreMxRow = ScoreMx0[ia];
-
-		for (uint PosB = 0; PosB < LB; ++PosB)
-			{
-			byte ib = ProfRowB[PosB];
-			assert(ia < AlphaSize0 && ib < AlphaSize0);
-			float MatchScore = ScoreMxRow[ib];
-			SimRow[PosB] = MatchScore;
-			}
-		}
-
-	for (uint FeatureIdx = 1; FeatureIdx < FeatureCount; ++FeatureIdx)
-		{
-		FEATURE F = m_Params->m_Features[FeatureIdx];
+	uint AlphaSum = 0;
+	vector<FeatureProfile> FeatureProfiles; // Not yet used downstream
+	FeatureProfiles.reserve(FeatureCount);
+	for (uint FeatureIdx = 0; FeatureIdx < FeatureCount; ++FeatureIdx) {
+		FEATURE F = Params.m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
-		const Matrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
-		const span<const byte> ProfRowA = ProfileA[FeatureIdx];
-		const span<const byte> ProfRowB = ProfileB[FeatureIdx];
-		for (uint PosA = 0; PosA < LA; ++PosA)
-			{
-			byte ia = ProfRowA[PosA];
-			assert(ia < AlphaSize);
-			span<const float> ScoreMxRow = ScoreMx[ia];
-			span<float> SimRow = m_SMx[PosA];
+		FeatureProfiles.emplace_back(FeatureProfile{AlphaSize, Params.m_ScoreMxs[F], ProfileB[FeatureIdx]});
+		AlphaSum += AlphaSize;
+	}
+	asserta(AlphaSum < 256);
 
-			for (uint PosB = 0; PosB < LB; ++PosB)
-				{
+	vector<std::array<byte, BLOCK_SIZE>> TransposedProfileB;
+	const uint block_count = LB >> BLOCK_BITS;
+	TransposedProfileB.reserve((block_count << BLOCK_BITS) * AlphaSum);
+	for (uint BlockB = 0; BlockB < block_count; BlockB++) {
+		uint AlphaCumSum = 0;
+		for (uint FeatureIdx = 0; FeatureIdx < FeatureCount; ++FeatureIdx) {
+			FEATURE F = Params.m_Features[FeatureIdx];
+		uint AlphaSize = g_AlphaSizes2[F];
+			span<const byte> ProfRowB = ProfileB[FeatureIdx];
+			std::array<byte, BLOCK_SIZE> block;
+			#pragma omp simd
+			for (uint i = 0; i < BLOCK_SIZE; ++i) {
+				uint PosB = BlockB * BLOCK_SIZE + i;
 				byte ib = ProfRowB[PosB];
 				assert(ib < AlphaSize);
-				float MatchScore = ScoreMxRow[ib];
-				SimRow[PosB] += MatchScore;
+				assert((uint)ib + (uint)AlphaCumSum < AlphaSum);
+				block[i] = ib + AlphaCumSum;
+			}
+
+			AlphaCumSum += AlphaSize;
+			TransposedProfileB.push_back(block);
 				}
 			}
+
+
+	for (uint PosA = 0; PosA < LA; ++PosA)
+		{
+			SetSMx_NoRev_Row(m_SMx, ProfileA, PosA, LB, FeatureProfiles, TransposedProfileB);
 		}
+		
 	EndTimer(SetSMx_NoRev);
 // GetScorePosPair bug?
-#if DEBUG
+#if 0
 	{
 	for (uint PosA = 0; PosA < LA; ++PosA)
 		{
