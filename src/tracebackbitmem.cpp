@@ -1,4 +1,5 @@
 #include "myutils.h"
+#include "arrays.h"
 #include "tracebit.h"
 #include "xdpmem.h"
 #include "pathinfo.h"

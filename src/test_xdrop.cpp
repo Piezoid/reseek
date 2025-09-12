@@ -1,4 +1,5 @@
 #include "myutils.h"
+#include "arrays.h"
 #include "xdpmem.h"
 
 void SetBLOSUM62();
