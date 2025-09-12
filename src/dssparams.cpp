@@ -262,19 +262,7 @@ void DSSParams::InitScoreMxs()
 	if (m_ScoreMxs != nullptr)
 		return;
 	uint FeatureCount = GetFeatureCount();
-	m_ScoreMxs = new SquareMatrix<float>[FEATURE_COUNT];
-	for (uint Idx = 0; Idx < FeatureCount; ++Idx)
-		{
-		FEATURE F = m_Features[Idx];
-		asserta(uint(F) < FEATURE_COUNT);
-		uint AS = g_AlphaSizes2[F];
-		m_ScoreMxs[F] = SquareMatrix<float>::Allocate(AS);
-#if DEBUG
-		for (uint Letter1 = 0; Letter1 < AS; ++Letter1)
-			for (uint Letter2 = 0; Letter2 < AS; ++Letter2)
-				m_ScoreMxs[F][Letter1][Letter2] = FLT_MAX;
-#endif
-		}
+	m_ScoreMxs = new SquareMatrix<float>[FEATURE_COUNT]();
 	ApplyWeights();
 	m_OwnScoreMxs = true;
 	}
@@ -332,7 +320,8 @@ void DSSParams::ApplyWeights()
 		FEATURE F = m_Features[Idx];
 		asserta(uint(F) < FEATURE_COUNT);
 		float w = m_Weights[Idx];
-		uint AS = g_AlphaSizes2[F];
+		SquareMatrix<feature_t> OrigSMx = GetScoreMx(F);
+		uint AS = OrigSMx.Rows();
 		if (AS == 0)
 			Die("Feature %s not supported", FeatureToStr(F));
 		
@@ -346,8 +335,9 @@ void DSSParams::ApplyWeights()
 		for (uint Letter1 = 0; Letter1 < AS; ++Letter1)
 			{
 			span<float> SMxRow = SMx[Letter1];
+			span<feature_t> OrigSMxRow = OrigSMx[Letter1];
 			for (uint Letter2 = 0; Letter2 < AS; ++Letter2)
-				SMxRow[Letter2] = w*g_ScoreMxs2[F][Letter1][Letter2];
+				SMxRow[Letter2] = w*OrigSMxRow[Letter2];
 			}
 		}
 	}

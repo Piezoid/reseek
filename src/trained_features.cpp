@@ -1,4 +1,5 @@
 #include "myutils.h"
+#include "arrays.h"
 #include "features.h"
 #include "dss.h"
 
@@ -6,7 +7,7 @@
 // AA ES=0.3350
 //////////////////////////////////
 
-static double AA_f_i[20] = {
+static feature_t AA_f_i[20] = {
    0.0850, // 0
    0.0139, // 1
    0.0579, // 2
@@ -29,7 +30,7 @@ static double AA_f_i[20] = {
    0.0345, // 19
  };
 
-static double AA_f_ij[20][20] = {
+static feature_t AA_f_ij[20][20] = {
    {    0.02272,   0.001646,   0.002919,   0.004864,   0.002432,   0.006075,   0.001461,   0.004283,   0.003778,   0.006819,   0.001631,   0.002247,   0.002781,    0.00261,   0.003341,   0.005929,   0.004285,   0.007254,  0.0006637,   0.001937, }, // 0
    {   0.001646,   0.003587,  0.0002041,  0.0002342,  0.0004958,  0.0005596,  0.0001955,  0.0007469,  0.0002573,   0.001114,  0.0002472,  0.0003124,  0.0002012,  0.0001964,  0.0002827,  0.0007308,   0.000649,   0.001327,  8.919e-05,  0.0003493, }, // 1
    {   0.002919,  0.0002041,    0.01675,   0.006558,  0.0005212,    0.00337,   0.001222,   0.000595,   0.003057,    0.00119,  0.0003619,   0.003832,   0.002096,   0.002268,   0.002372,    0.00381,   0.002593,  0.0009606,  0.0002044,  0.0006708, }, // 2
@@ -52,7 +53,7 @@ static double AA_f_ij[20][20] = {
    {   0.001937,  0.0003493,  0.0006708,   0.001031,   0.003678,  0.0009158,   0.001191,   0.001682,  0.0009866,   0.002995,  0.0006341,  0.0008147,  0.0006012,  0.0007616,   0.001184,   0.001134,   0.001133,   0.002089,   0.001087,   0.007676, }, // 19
  };
 
-double AA_S_ij[20][20] = {
+static feature_t AA_S_ij[20][20] = {
    {      1.145,     0.3335,    -0.5222,    -0.1958,    -0.3484,   -0.01201,    -0.3032,    -0.1449,    -0.2829,    -0.1585,    0.05807,    -0.4555,    -0.3335,    -0.1833,    -0.2786,      0.165,   -0.05766,     0.1742,    -0.5551,    -0.4158, }, // 0
    {     0.3335,      2.926,     -1.369,     -1.416,    -0.1251,    -0.5832,     -0.501,    -0.0779,     -1.156,    -0.1569,   -0.01527,    -0.6152,     -1.146,    -0.9569,    -0.9347,    -0.1149,    -0.1316,     0.2889,    -0.7486,    -0.3152, }, // 1
    {    -0.5222,     -1.369,       1.61,     0.4882,     -1.504,    -0.2162,   -0.09713,     -1.734,    -0.1095,     -1.519,     -1.062,     0.4632,     -0.231,    0.06098,    -0.2362,     0.1078,    -0.1749,     -1.462,     -1.348,     -1.091, }, // 2
@@ -79,7 +80,7 @@ double AA_S_ij[20][20] = {
 // NENDist ES=0.6350
 //////////////////////////////////
 
-static double NENDist_f_i[16] = {
+static feature_t NENDist_f_i[16] = {
    0.0528, // 0
    0.0521, // 1
    0.0517, // 2
@@ -98,7 +99,7 @@ static double NENDist_f_i[16] = {
    0.1070, // 15
  };
 
-static double NENDist_f_ij[16][16] = {
+static feature_t NENDist_f_ij[16][16] = {
    {    0.02381,    0.01367,   0.007359,   0.004611,   0.003204,   0.002385,   0.001827,   0.001157,  0.0008335,  0.0006485,  0.0005677,  0.0004579,  0.0003982,  0.0003178,  0.0002132,  0.0001439, }, // 0
    {    0.01367,      0.018,     0.0139,   0.007529,    0.00406,   0.002491,   0.001634,  0.0009854,   0.000727,  0.0005076,  0.0004615,  0.0003814,  0.0003237,  0.0002654,  0.0001645,  0.0001267, }, // 1
    {   0.007359,     0.0139,    0.01804,    0.01145,     0.0059,   0.003276,   0.001972,   0.001132,  0.0008169,  0.0006074,  0.0004939,  0.0004088,  0.0003398,  0.0002872,  0.0001866,  0.0001523, }, // 2
@@ -117,7 +118,7 @@ static double NENDist_f_ij[16][16] = {
    {  0.0001439,  0.0001267,  0.0001523,  0.0001815,  0.0002446,  0.0003382,  0.0005294,  0.0006818,  0.0007846,   0.001033,   0.001333,   0.001855,   0.002675,   0.004231,    0.01038,    0.04321, }, // 15
  };
 
-static double NENDist_S_ij[16][16] = {
+static feature_t NENDist_S_ij[16][16] = {
    {      2.146,      1.605,      0.992,     0.5072,     0.1202,     -0.211,    -0.5549,     -1.046,     -1.369,     -1.623,     -1.752,     -1.982,      -2.14,     -2.389,     -2.883,      -3.67, }, // 0
    {      1.605,      1.893,      1.641,      1.011,     0.3702,    -0.1544,    -0.6532,     -1.194,     -1.493,     -1.855,     -1.946,     -2.152,     -2.334,     -2.555,      -3.13,     -3.784, }, // 1
    {      0.992,      1.641,      1.909,      1.437,     0.7509,     0.1266,    -0.4583,     -1.048,     -1.369,     -1.668,     -1.871,     -2.076,     -2.278,      -2.47,     -2.996,     -3.593, }, // 2
@@ -140,7 +141,7 @@ static double NENDist_S_ij[16][16] = {
 // Conf ES=1.2640
 //////////////////////////////////
 
-static double Conf_f_i[16] = {
+static feature_t Conf_f_i[16] = {
    0.2978, // 0
    0.1026, // 1
    0.0802, // 2
@@ -159,7 +160,7 @@ static double Conf_f_i[16] = {
    0.0257, // 15
  };
 
-static double Conf_f_ij[16][16] = {
+static feature_t Conf_f_ij[16][16] = {
    {      0.253,   0.001647,  0.0008881,  0.0007231,   0.001253,   0.000702,  0.0007163,   0.005044,    0.00207,    0.00135,  0.0005329,   0.008786,   0.001337,  0.0005361,  0.0005256,  0.0003149, }, // 0
    {   0.001647,    0.06538,    0.02076,   0.006955,   0.001279,   0.007452,  0.0008511,  0.0001147,  0.0001373,  0.0003445,   0.006422,  0.0002545,   6.81e-05,  0.0009889,  0.0003344,  0.0001024, }, // 1
    {  0.0008881,    0.02076,    0.06826,    0.00113,  0.0004438,   0.002954,  0.0002149,  2.126e-05,  3.517e-05,  7.977e-05,    0.00104,  5.635e-05,  2.566e-05,  0.0001757,  6.424e-05,  2.028e-05, }, // 2
@@ -178,7 +179,7 @@ static double Conf_f_ij[16][16] = {
    {  0.0003149,  0.0001024,  2.028e-05,  0.0001332,  0.0002365,    7.6e-05,  0.0004668,  0.0005896,   0.001079,    0.00344,    0.00018,  0.0001378,   0.001376,  0.0005706,  0.0006422,     0.0162, }, // 15
  };
 
-static double Conf_S_ij[16][16] = {
+static feature_t Conf_S_ij[16][16] = {
    {      1.048,     -2.921,     -3.292,     -3.022,     -2.459,     -2.978,      -2.93,    -0.9572,       -1.8,     -2.193,     -3.103,    -0.3403,     -2.029,     -2.839,      -2.84,      -3.19, }, // 0
    {     -2.921,      1.825,     0.9252,     0.3069,     -1.374,     0.4492,     -1.693,     -3.676,     -3.448,     -2.493,     0.4514,     -2.817,     -3.941,     -1.162,     -2.227,     -3.248, }, // 1
    {     -3.292,     0.9252,      2.362,     -1.263,     -2.185,    -0.2291,     -2.822,     -5.114,     -4.562,     -3.709,     -1.122,     -4.078,      -4.67,     -2.643,      -3.63,      -4.62, }, // 2
@@ -201,7 +202,7 @@ static double Conf_S_ij[16][16] = {
 // NENConf ES=0.5870
 //////////////////////////////////
 
-static double NENConf_f_i[16] = {
+static feature_t NENConf_f_i[16] = {
    0.2439, // 0
    0.1353, // 1
    0.1246, // 2
@@ -220,7 +221,7 @@ static double NENConf_f_i[16] = {
    0.0248, // 15
  };
 
-static double NENConf_f_ij[16][16] = {
+static feature_t NENConf_f_ij[16][16] = {
    {     0.1395,   0.008571,   0.006752,   0.004092,   0.003108,   0.003327,   0.002477,   0.007049,   0.003076,   0.005219,   0.002386,   0.006468,   0.004605,   0.002838,   0.002547,    0.00236, }, // 0
    {   0.008571,    0.06779,    0.03103,   0.008509,    0.00311,   0.009583,   0.002949,   0.001097,   0.001062,   0.002585,   0.007484,   0.001434,   0.001591,   0.002983,   0.001933,   0.001279, }, // 1
    {   0.006752,    0.03103,    0.09111,   0.003809,   0.002005,   0.006608,   0.001637,  0.0007023,  0.0006638,   0.001714,   0.003336,  0.0008244,   0.001015,   0.001598,   0.001174,  0.0007994, }, // 2
@@ -239,7 +240,7 @@ static double NENConf_f_ij[16][16] = {
    {    0.00236,   0.001279,  0.0007994,  0.0006845,  0.0005768,  0.0004999,   0.001158,  0.0008006,  0.0007443,   0.002271,  0.0006774,  0.0004196,   0.001017,  0.0008422,  0.0007806,   0.007617, }, // 15
  };
 
-static double NENConf_S_ij[16][16] = {
+static feature_t NENConf_S_ij[16][16] = {
    {     0.8518,     -1.348,     -1.504,     -1.261,      -1.12,     -1.334,     -1.295,    -0.2256,    -0.7107,    -0.7126,     -1.432,    -0.2992,    -0.6039,     -1.167,     -1.061,    -0.9396, }, // 0
    {     -1.348,      1.309,       0.61,    0.06016,      -0.53,     0.3132,    -0.5315,     -1.497,     -1.185,    -0.8258,     0.3011,     -1.217,     -1.077,     -0.528,     -0.748,    -0.9624, }, // 1
    {     -1.504,       0.61,       1.77,    -0.6611,    -0.8862,    0.02405,     -1.038,      -1.86,     -1.572,     -1.154,    -0.4244,     -1.687,     -1.445,      -1.07,     -1.164,      -1.35, }, // 2
@@ -262,7 +263,7 @@ static double NENConf_S_ij[16][16] = {
 // RENDist ES=0.8040
 //////////////////////////////////
 
-static double RENDist_f_i[16] = {
+static feature_t RENDist_f_i[16] = {
    0.0513, // 0
    0.0267, // 1
    0.0452, // 2
@@ -281,7 +282,7 @@ static double RENDist_f_i[16] = {
    0.1142, // 15
  };
 
-static double RENDist_f_ij[16][16] = {
+static feature_t RENDist_f_ij[16][16] = {
    {     0.0555,   0.005908,   0.002601,   0.001612,   0.001196,  0.0007761,  0.0002856,  0.0002057,   0.000173,  0.0001283,  7.438e-05,  5.267e-05,  3.499e-05,   2.79e-05,   3.58e-05,   0.000127, }, // 0
    {   0.005908,    0.01085,   0.007284,   0.003249,   0.001817,  0.0009797,  0.0004493,  0.0002793,  0.0001906,   0.000128,  8.847e-05,  4.334e-05,  3.427e-05,   2.88e-05,  2.979e-05,  0.0001211, }, // 1
    {   0.002601,   0.007284,    0.01842,    0.01191,    0.00548,   0.002495,   0.001222,  0.0006654,  0.0004263,  0.0002634,  0.0001809,  0.0001303,  8.551e-05,  6.299e-05,  5.321e-05,  0.0001755, }, // 2
@@ -300,7 +301,7 @@ static double RENDist_f_ij[16][16] = {
    {   0.000127,  0.0001211,  0.0001755,  0.0002841,  0.0004681,    0.01554,  0.0006381,  0.0007037,  0.0008806,   0.001086,   0.001385,   0.001876,    0.00252,   0.003842,   0.008687,    0.05812, }, // 15
  };
 
-static double RENDist_S_ij[16][16] = {
+static feature_t RENDist_S_ij[16][16] = {
    {       3.05,       1.46,     0.1157,    -0.8224,     -1.452,     -2.722,     -2.474,     -2.607,      -2.64,     -2.782,     -3.149,     -3.392,     -3.708,     -3.879,     -3.893,     -3.831, }, // 0
    {       1.46,      2.719,      1.796,     0.5287,    -0.3827,     -1.839,     -1.371,     -1.651,     -1.893,     -2.134,     -2.325,     -2.936,     -3.078,     -3.197,     -3.427,     -3.228, }, // 1
    {     0.1157,      1.796,        2.2,      1.304,     0.1968,     -1.428,    -0.8939,     -1.307,     -1.612,     -1.936,     -2.134,      -2.36,     -2.688,     -2.939,     -3.371,     -3.381, }, // 2
@@ -323,7 +324,7 @@ static double RENDist_S_ij[16][16] = {
 // DstNxtHlx ES=0.7460
 //////////////////////////////////
 
-static double DstNxtHlx_f_i[16] = {
+static feature_t DstNxtHlx_f_i[16] = {
    0.3155, // 0
    0.0033, // 1
    0.0061, // 2
@@ -342,7 +343,7 @@ static double DstNxtHlx_f_i[16] = {
    0.1062, // 15
  };
 
-static double DstNxtHlx_f_ij[16][16] = {
+static feature_t DstNxtHlx_f_ij[16][16] = {
    {     0.2697,  0.0003007,  0.0003036,  0.0004465,  0.0006497,  0.0008378,   0.001063,   0.001276,    0.00147,    0.00203,   0.001774,   0.002834,   0.002749,   0.005023,   0.003912,   0.007215, }, // 0
    {  0.0003007,   0.000824,  0.0005374,    0.00033,  0.0004237,  0.0004296,  0.0002618,  0.0001333,  8.937e-05,  6.442e-05,  4.145e-05,  6.047e-05,  5.464e-05,  8.551e-05,   5.06e-05,  4.827e-05, }, // 1
    {  0.0003036,  0.0005374,    0.00119,   0.001027,  0.0006842,  0.0007107,  0.0005917,  0.0003641,  0.0002279,  0.0001491,  9.663e-05,  0.0001416,  0.0001336,  0.0002014,  0.0001172,  8.614e-05, }, // 2
@@ -361,7 +362,7 @@ static double DstNxtHlx_f_ij[16][16] = {
    {   0.007215,  4.827e-05,  8.614e-05,  0.0001581,  0.0002653,  0.0004108,    0.00051,  0.0006274,  0.0007808,   0.001173,   0.001065,   0.002071,   0.002371,    0.00615,    0.01059,    0.04467, }, // 15
  };
 
-static double DstNxtHlx_S_ij[16][16] = {
+static feature_t DstNxtHlx_S_ij[16][16] = {
    {     0.9963,     -1.243,      -1.85,      -2.06,      -2.15,     -2.255,     -2.193,     -2.164,     -2.153,     -1.984,     -2.049,     -2.117,     -2.039,     -1.902,     -1.739,     -1.535, }, // 0
    {     -1.243,      4.324,       3.28,      2.197,      1.982,      1.636,      0.965,     0.1362,    -0.3939,    -0.8754,     -1.246,     -1.405,     -1.398,     -1.416,     -1.528,     -1.983, }, // 1
    {      -1.85,       3.28,      3.458,      2.715,      1.844,      1.523,      1.163,     0.5238,    -0.0747,     -0.653,     -1.017,     -1.171,     -1.121,     -1.176,     -1.305,     -2.021, }, // 2
@@ -384,7 +385,7 @@ static double DstNxtHlx_S_ij[16][16] = {
 // StrandDens ES=0.8590
 //////////////////////////////////
 
-static double StrandDens_f_i[16] = {
+static feature_t StrandDens_f_i[16] = {
    0.0946, // 0
    0.0973, // 1
    0.0699, // 2
@@ -403,7 +404,7 @@ static double StrandDens_f_i[16] = {
    0.0643, // 15
  };
 
-static double StrandDens_f_ij[16][16] = {
+static feature_t StrandDens_f_ij[16][16] = {
    {    0.03569,    0.01204,   0.001333,  0.0003952,  0.0001987,  0.0001273,   9.08e-05,  7.779e-05,  5.392e-05,  4.764e-05,  3.122e-05,  2.261e-05,  1.095e-05,  7.088e-06,  1.077e-06,  0.0003573, }, // 0
    {    0.01204,    0.03203,     0.0116,   0.003818,   0.001887,   0.001206,  0.0008091,  0.0005706,  0.0003775,  0.0002597,  0.0001686,  9.906e-05,  4.881e-05,  2.369e-05,  5.563e-06,  0.0002836, }, // 1
    {   0.001333,     0.0116,    0.01815,    0.01112,   0.006123,   0.003787,    0.00245,    0.00162,   0.001047,  0.0006648,  0.0004022,  0.0002308,  0.0001131,  4.388e-05,  1.642e-05,  0.0002576, }, // 2
@@ -422,7 +423,7 @@ static double StrandDens_f_ij[16][16] = {
    {  0.0003573,  0.0002836,  0.0002576,  0.0002531,  0.0002267,  0.0002193,  0.0002021,  0.0002257,  0.0002478,  0.0003163,  0.0004506,  0.0009147,   0.002101,   0.005722,    0.01584,    0.04221, }, // 15
  };
 
-static double StrandDens_S_ij[16][16] = {
+static feature_t StrandDens_S_ij[16][16] = {
    {      1.384,     0.2691,     -1.601,     -2.661,     -3.276,      -3.69,     -4.015,     -4.176,     -4.553,     -4.701,     -5.148,     -5.505,     -6.236,     -6.648,     -8.496,     -2.834, }, // 0
    {     0.2691,      1.219,     0.5335,    -0.4214,     -1.054,      -1.47,     -1.856,     -2.212,     -2.636,     -3.034,      -3.49,     -4.056,      -4.77,      -5.47,     -6.882,     -3.093, }, // 1
    {     -1.601,     0.5335,      1.313,     0.9788,     0.4539,   0.004853,    -0.4174,    -0.8378,     -1.285,     -1.763,      -2.29,      -2.88,     -3.599,     -4.523,     -5.469,     -2.859, }, // 2
@@ -445,7 +446,7 @@ static double StrandDens_S_ij[16][16] = {
 // NormDens ES=0.7610
 //////////////////////////////////
 
-static double NormDens_f_i[16] = {
+static feature_t NormDens_f_i[16] = {
    0.1064, // 0
    0.0759, // 1
    0.0687, // 2
@@ -464,7 +465,7 @@ static double NormDens_f_i[16] = {
    0.0630, // 15
  };
 
-static double NormDens_f_ij[16][16] = {
+static feature_t NormDens_f_ij[16][16] = {
    {    0.05718,    0.01822,    0.00682,   0.003047,   0.001471,  0.0008191,  0.0004921,  0.0003201,   0.000233,  0.0001525,   0.000107,  8.317e-05,   4.98e-05,  3.562e-05,  1.732e-05,   0.002819, }, // 0
    {    0.01822,    0.02406,    0.01389,   0.006916,   0.003573,   0.001914,   0.001086,  0.0006353,  0.0004266,  0.0002739,  0.0002045,  0.0001502,  9.394e-05,  6.424e-05,   3.67e-05,  0.0005315, }, // 1
    {    0.00682,    0.01389,    0.01665,    0.01131,    0.00645,   0.003578,   0.002067,   0.001196,  0.0007398,  0.0004856,  0.0003254,  0.0002269,  0.0001325,  8.362e-05,  5.366e-05,   0.000226, }, // 2
@@ -483,7 +484,7 @@ static double NormDens_f_ij[16][16] = {
    {   0.002819,  0.0005315,   0.000226,  0.0001476,  0.0001179,  0.0001283,  0.0001751,  0.0002091,  0.0003242,   0.000474,  0.0007156,   0.001309,   0.002203,   0.004548,    0.01179,    0.03867, }, // 15
  };
 
-static double NormDens_S_ij[16][16] = {
+static feature_t NormDens_S_ij[16][16] = {
    {      1.619,     0.8131,   -0.06952,    -0.8142,     -1.513,      -2.08,     -2.558,     -2.957,     -3.259,     -3.657,     -3.997,     -4.246,     -4.737,     -5.059,     -5.757,    -0.8663, }, // 0
    {     0.8131,      1.429,     0.9792,     0.3429,    -0.2883,    -0.8937,     -1.428,     -1.934,     -2.316,     -2.734,     -3.012,     -3.318,     -3.765,     -4.132,     -4.668,     -2.197, }, // 1
    {   -0.06952,     0.9792,      1.261,     0.9351,     0.4025,    -0.1679,    -0.6851,     -1.201,     -1.666,     -2.062,     -2.447,     -2.805,     -3.321,     -3.768,     -4.188,     -2.952, }, // 2
@@ -502,169 +503,98 @@ static double NormDens_S_ij[16][16] = {
    {    -0.8663,     -2.197,     -2.952,     -3.317,     -3.513,     -3.409,     -3.067,     -2.858,     -2.404,     -1.999,     -1.572,    -0.9662,     -0.423,     0.3147,      1.291,      2.277, }, // 15
  };
 
-float **g_ScoreMxs2[FEATURE_COUNT];
-float **g_FreqMxs2[FEATURE_COUNT];
-float *g_FreqVecs2[FEATURE_COUNT];
-uint g_AlphaSizes2[FEATURE_COUNT];
 
-static void FreeMe();
+ SquareMatrix<feature_t> GetScoreMx(FEATURE F)
+  {
+  switch (F)
+    {
+    case FEATURE_AA:
+      assert(DSS::GetAlphaSize(FEATURE_AA) == 20);
+      return SquareMatrix<feature_t>::FromSharedData(&AA_S_ij[0][0], 20);
+    case FEATURE_NENDist:
+      assert(DSS::GetAlphaSize(FEATURE_NENDist) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&NENDist_S_ij[0][0], 16);
+    case FEATURE_Conf:
+      assert(DSS::GetAlphaSize(FEATURE_Conf) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&Conf_S_ij[0][0], 16);
+    case FEATURE_NENConf:
+      assert(DSS::GetAlphaSize(FEATURE_NENConf) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&NENConf_S_ij[0][0], 16);
+    case FEATURE_RENDist:
+      assert(DSS::GetAlphaSize(FEATURE_RENDist) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&RENDist_S_ij[0][0], 16);
+    case FEATURE_DstNxtHlx:
+      assert(DSS::GetAlphaSize(FEATURE_DstNxtHlx) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&DstNxtHlx_S_ij[0][0], 16);
+    case FEATURE_StrandDens:
+      assert(DSS::GetAlphaSize(FEATURE_StrandDens) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&StrandDens_S_ij[0][0], 16);
+    case FEATURE_NormDens:
+      assert(DSS::GetAlphaSize(FEATURE_NormDens) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&NormDens_S_ij[0][0], 16);
+    default:
+      Die("GetScoreMx(%u)", F);
+      return SquareMatrix<feature_t>();
+    }
+  }
 
-static bool Init()
-	{
-	atexit(FreeMe);
-	asserta(DSS::GetAlphaSize(FEATURE_AA) == 20);
-	asserta(DSS::GetAlphaSize(FEATURE_NENDist) == 16);
-	asserta(DSS::GetAlphaSize(FEATURE_Conf) == 16);
-	asserta(DSS::GetAlphaSize(FEATURE_NENConf) == 16);
-	asserta(DSS::GetAlphaSize(FEATURE_RENDist) == 16);
-	asserta(DSS::GetAlphaSize(FEATURE_DstNxtHlx) == 16);
-	asserta(DSS::GetAlphaSize(FEATURE_StrandDens) == 16);
-	asserta(DSS::GetAlphaSize(FEATURE_NormDens) == 16);
+SquareMatrix<feature_t> GetFreqMx(FEATURE F)
+  {
+  switch (F)
+    {
+    case FEATURE_AA:
+      assert(DSS::GetAlphaSize(FEATURE_AA) == 20);
+      return SquareMatrix<feature_t>::FromSharedData(&AA_f_ij[0][0], 20);
+    case FEATURE_NENDist:
+      assert(DSS::GetAlphaSize(FEATURE_NENDist) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&NENDist_f_ij[0][0], 16);
+    case FEATURE_Conf:
+      assert(DSS::GetAlphaSize(FEATURE_Conf) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&Conf_f_ij[0][0], 16);
+    case FEATURE_NENConf:
+      assert(DSS::GetAlphaSize(FEATURE_NENConf) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&NENConf_f_ij[0][0], 16);
+    case FEATURE_RENDist:
+      assert(DSS::GetAlphaSize(FEATURE_RENDist) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&RENDist_f_ij[0][0], 16);
+    case FEATURE_DstNxtHlx:
+      assert(DSS::GetAlphaSize(FEATURE_DstNxtHlx) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&DstNxtHlx_f_ij[0][0], 16);
+    case FEATURE_StrandDens:
+      assert(DSS::GetAlphaSize(FEATURE_StrandDens) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&StrandDens_f_ij[0][0], 16);
+    case FEATURE_NormDens:
+      assert(DSS::GetAlphaSize(FEATURE_NormDens) == 16);
+      return SquareMatrix<feature_t>::FromSharedData(&NormDens_f_ij[0][0], 16);
+    default:
+      Die("GetScoreMx(%u)", F);
+      return SquareMatrix<feature_t>();
+    }
+  }
 
-	g_AlphaSizes2[FEATURE_AA] = 20;
-	g_AlphaSizes2[FEATURE_NENDist] = 16;
-	g_AlphaSizes2[FEATURE_Conf] = 16;
-	g_AlphaSizes2[FEATURE_NENConf] = 16;
-	g_AlphaSizes2[FEATURE_RENDist] = 16;
-	g_AlphaSizes2[FEATURE_DstNxtHlx] = 16;
-	g_AlphaSizes2[FEATURE_StrandDens] = 16;
-	g_AlphaSizes2[FEATURE_NormDens] = 16;
 
-	g_FreqMxs2[FEATURE_AA] = myalloc(float *, 20);
-	g_ScoreMxs2[FEATURE_AA] = myalloc(float *, 20);
-	g_FreqVecs2[FEATURE_AA] = myalloc(float, 20);
-	for (uint i = 0; i < 20; ++i)
-		{
-		g_FreqVecs2[FEATURE_AA][i] = (float) AA_f_i[i];
-		g_FreqMxs2[FEATURE_AA][i] = myalloc(float, 20);
-		g_ScoreMxs2[FEATURE_AA][i] = myalloc(float, 20);
-		for (uint j = 0; j < 20; ++j)
-			{
-			g_FreqMxs2[FEATURE_AA][i][j] = (float) AA_f_ij[i][j];
-			g_ScoreMxs2[FEATURE_AA][i][j] = (float) AA_S_ij[i][j];
-			}
-		}
-	g_FreqMxs2[FEATURE_NENDist] = myalloc(float *, 16);
-	g_ScoreMxs2[FEATURE_NENDist] = myalloc(float *, 16);
-	g_FreqVecs2[FEATURE_NENDist] = myalloc(float, 16);
-	for (uint i = 0; i < 16; ++i)
-		{
-		g_FreqVecs2[FEATURE_NENDist][i] = (float) NENDist_f_i[i];
-		g_FreqMxs2[FEATURE_NENDist][i] = myalloc(float, 16);
-		g_ScoreMxs2[FEATURE_NENDist][i] = myalloc(float, 16);
-		for (uint j = 0; j < 16; ++j)
-			{
-			g_FreqMxs2[FEATURE_NENDist][i][j] = (float) NENDist_f_ij[i][j];
-			g_ScoreMxs2[FEATURE_NENDist][i][j] = (float) NENDist_S_ij[i][j];
-			}
-		}
-	g_FreqMxs2[FEATURE_Conf] = myalloc(float *, 16);
-	g_ScoreMxs2[FEATURE_Conf] = myalloc(float *, 16);
-	g_FreqVecs2[FEATURE_Conf] = myalloc(float, 16);
-	for (uint i = 0; i < 16; ++i)
-		{
-		g_FreqVecs2[FEATURE_Conf][i] = (float) Conf_f_i[i];
-		g_FreqMxs2[FEATURE_Conf][i] = myalloc(float, 16);
-		g_ScoreMxs2[FEATURE_Conf][i] = myalloc(float, 16);
-		for (uint j = 0; j < 16; ++j)
-			{
-			g_FreqMxs2[FEATURE_Conf][i][j] = (float) Conf_f_ij[i][j];
-			g_ScoreMxs2[FEATURE_Conf][i][j] = (float) Conf_S_ij[i][j];
-			}
-		}
-	g_FreqMxs2[FEATURE_NENConf] = myalloc(float *, 16);
-	g_ScoreMxs2[FEATURE_NENConf] = myalloc(float *, 16);
-	g_FreqVecs2[FEATURE_NENConf] = myalloc(float, 16);
-	for (uint i = 0; i < 16; ++i)
-		{
-		g_FreqVecs2[FEATURE_NENConf][i] = (float) NENConf_f_i[i];
-		g_FreqMxs2[FEATURE_NENConf][i] = myalloc(float, 16);
-		g_ScoreMxs2[FEATURE_NENConf][i] = myalloc(float, 16);
-		for (uint j = 0; j < 16; ++j)
-			{
-			g_FreqMxs2[FEATURE_NENConf][i][j] = (float) NENConf_f_ij[i][j];
-			g_ScoreMxs2[FEATURE_NENConf][i][j] = (float) NENConf_S_ij[i][j];
-			}
-		}
-	g_FreqMxs2[FEATURE_RENDist] = myalloc(float *, 16);
-	g_ScoreMxs2[FEATURE_RENDist] = myalloc(float *, 16);
-	g_FreqVecs2[FEATURE_RENDist] = myalloc(float, 16);
-	for (uint i = 0; i < 16; ++i)
-		{
-		g_FreqVecs2[FEATURE_RENDist][i] = (float) RENDist_f_i[i];
-		g_FreqMxs2[FEATURE_RENDist][i] = myalloc(float, 16);
-		g_ScoreMxs2[FEATURE_RENDist][i] = myalloc(float, 16);
-		for (uint j = 0; j < 16; ++j)
-			{
-			g_FreqMxs2[FEATURE_RENDist][i][j] = (float) RENDist_f_ij[i][j];
-			g_ScoreMxs2[FEATURE_RENDist][i][j] = (float) RENDist_S_ij[i][j];
-			}
-		}
-	g_FreqMxs2[FEATURE_DstNxtHlx] = myalloc(float *, 16);
-	g_ScoreMxs2[FEATURE_DstNxtHlx] = myalloc(float *, 16);
-	g_FreqVecs2[FEATURE_DstNxtHlx] = myalloc(float, 16);
-	for (uint i = 0; i < 16; ++i)
-		{
-		g_FreqVecs2[FEATURE_DstNxtHlx][i] = (float) DstNxtHlx_f_i[i];
-		g_FreqMxs2[FEATURE_DstNxtHlx][i] = myalloc(float, 16);
-		g_ScoreMxs2[FEATURE_DstNxtHlx][i] = myalloc(float, 16);
-		for (uint j = 0; j < 16; ++j)
-			{
-			g_FreqMxs2[FEATURE_DstNxtHlx][i][j] = (float) DstNxtHlx_f_ij[i][j];
-			g_ScoreMxs2[FEATURE_DstNxtHlx][i][j] = (float) DstNxtHlx_S_ij[i][j];
-			}
-		}
-	g_FreqMxs2[FEATURE_StrandDens] = myalloc(float *, 16);
-	g_ScoreMxs2[FEATURE_StrandDens] = myalloc(float *, 16);
-	g_FreqVecs2[FEATURE_StrandDens] = myalloc(float, 16);
-	for (uint i = 0; i < 16; ++i)
-		{
-		g_FreqVecs2[FEATURE_StrandDens][i] = (float) StrandDens_f_i[i];
-		g_FreqMxs2[FEATURE_StrandDens][i] = myalloc(float, 16);
-		g_ScoreMxs2[FEATURE_StrandDens][i] = myalloc(float, 16);
-		for (uint j = 0; j < 16; ++j)
-			{
-			g_FreqMxs2[FEATURE_StrandDens][i][j] = (float) StrandDens_f_ij[i][j];
-			g_ScoreMxs2[FEATURE_StrandDens][i][j] = (float) StrandDens_S_ij[i][j];
-			}
-		}
-	g_FreqMxs2[FEATURE_NormDens] = myalloc(float *, 16);
-	g_ScoreMxs2[FEATURE_NormDens] = myalloc(float *, 16);
-	g_FreqVecs2[FEATURE_NormDens] = myalloc(float, 16);
-	for (uint i = 0; i < 16; ++i)
-		{
-		g_FreqVecs2[FEATURE_NormDens][i] = (float) NormDens_f_i[i];
-		g_FreqMxs2[FEATURE_NormDens][i] = myalloc(float, 16);
-		g_ScoreMxs2[FEATURE_NormDens][i] = myalloc(float, 16);
-		for (uint j = 0; j < 16; ++j)
-			{
-			g_FreqMxs2[FEATURE_NormDens][i][j] = (float) NormDens_f_ij[i][j];
-			g_ScoreMxs2[FEATURE_NormDens][i][j] = (float) NormDens_S_ij[i][j];
-			}
-		}
-	return true;
-	}
-static bool InitDone = Init();
-
-static void FreeMe()
-	{
-	for (uint F = 0; F < FEATURE_COUNT; ++F)
-		{
-		if (g_ScoreMxs2[F] != 0)
-			{
-			uint AS = g_AlphaSizes2[F];
-			for (uint i = 0; i < AS; ++i)
-				myfree(g_ScoreMxs2[F][i]);
-			myfree(g_ScoreMxs2[F]);
-			}
-		if (g_FreqMxs2[F] != 0)
-			{
-			uint AS = g_AlphaSizes2[F];
-			for (uint i = 0; i < AS; ++i)
-				myfree(g_FreqMxs2[F][i]);
-			myfree(g_FreqMxs2[F]);
-			}
-		if (g_FreqVecs2[F] != 0)
-			myfree(g_FreqVecs2[F]);
-		}
-	}
+span<feature_t> GetFreqVec(FEATURE F)
+  {
+  switch (F)
+    {
+    case FEATURE_AA:
+      return span<feature_t>(AA_f_i, 20);
+    case FEATURE_NENDist:
+      return span<feature_t>(NENDist_f_i, 16);
+    case FEATURE_Conf:
+      return span<feature_t>(Conf_f_i, 16);
+    case FEATURE_NENConf:
+      return span<feature_t>(NENConf_f_i, 16);
+    case FEATURE_RENDist:
+      return span<feature_t>(RENDist_f_i, 16);
+    case FEATURE_DstNxtHlx:
+      return span<feature_t>(DstNxtHlx_f_i, 16);
+    case FEATURE_StrandDens:
+      return span<feature_t>(StrandDens_f_i, 16);
+    case FEATURE_NormDens:
+      return span<feature_t>(NormDens_f_i, 16);
+    default:
+      Die("GetFreqVec(%u)", F);
+      return span<feature_t>();
+    }
+  }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "arrays.h"
+
 enum FEATURE
 	{
 #define F(x)	FEATURE_##x,
@@ -18,5 +20,8 @@ uint StrToFeatureIndex(const char *s);
 bool FeatureIsInt(FEATURE f);
 bool FeatureIsInt(uint FeatureIndex);
 
-extern float **g_ScoreMxs2[FEATURE_COUNT];
-extern uint g_AlphaSizes2[FEATURE_COUNT];
+using feature_t = const float;
+
+SquareMatrix<feature_t> GetScoreMx(FEATURE F);
+SquareMatrix<feature_t> GetFreqMx(FEATURE F);
+span<feature_t> GetFreqVec(FEATURE F);

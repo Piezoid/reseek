@@ -60,15 +60,12 @@ void cmd_feature_stats()
 	{
 	for (uint F = 0; F < FEATURE_COUNT; ++F)
 		{
-		uint AS = g_AlphaSizes2[F];
-		float **Mx = g_ScoreMxs2[F];
+		SquareMatrix<feature_t> Mx = GetScoreMx(FEATURE(F));
+		uint AS = Mx.Rows();
 		ProgressLog("[%2u]  %s",
 		  F, FeatureToStr(F));
-		if (Mx == 0)
-			ProgressLog("  < missing scoremx");
+		// if (Mx == 0)
+		// 	ProgressLog("  < missing scoremx");
 		ProgressLog("\n");
 		}
 	}
-
-extern float **g_ScoreMxs2[FEATURE_COUNT];
-extern uint g_AlphaSizes2[FEATURE_COUNT];

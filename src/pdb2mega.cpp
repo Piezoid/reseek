@@ -14,9 +14,6 @@ static void ReverseChains(vector<PDBChain *> &Chains)
 		}
 	}
 
-extern float **g_FreqMxs2[FEATURE_COUNT];
-extern float *g_FreqVecs2[FEATURE_COUNT];
-
 void cmd_pdb2mega()
 	{
 	if (!optset_output)
@@ -51,16 +48,16 @@ void cmd_pdb2mega()
 		FEATURE F = Params.m_Features[i];
 		if (F == FEATURE_AA)
 			AAFeatureIdx = i;
-		uint AlphaSize = g_AlphaSizes2[F];
+		span<feature_t> Freqs = GetFreqVec(F);
+		uint AlphaSize = Freqs.size();
 		asserta(AlphaSize <= 20); // because 'a'+Letter below
 		fprintf(fOut, "%u\t%s\t%u\t%.6g\n",
 		  i, FeatureToStr(F), AlphaSize, Params.m_Weights[i]);
 		fprintf(fOut, "freqs");
-		const float *Freqs = g_FreqVecs2[F];
 		for (uint Letter = 0; Letter < AlphaSize; ++Letter)
 			fprintf(fOut, "\t%.4g", Freqs[Letter]);
 		fprintf(fOut, "\n");
-		const float * const *FreqMx = g_FreqMxs2[F];
+		SquareMatrix<feature_t> FreqMx = GetFreqMx(F);
 		for (uint Letter1 = 0; Letter1 < AlphaSize; ++Letter1)
 			{
 			fprintf(fOut, "%u", Letter1);

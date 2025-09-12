@@ -40,20 +40,19 @@ void cmd_musubstmx()
 	Fs.push_back(FEATURE_RENDist4);
 	const uint NF = SIZE(Fs);
 
-	vector<float **> ScoreMxs;
-	ScoreMxs.push_back(g_ScoreMxs2[FEATURE_SS3]);
-	ScoreMxs.push_back(g_ScoreMxs2[FEATURE_NENSS3]);
-	ScoreMxs.push_back(g_ScoreMxs2[FEATURE_RENDist4]);
+	vector<SquareMatrix<feature_t>> ScoreMxs;
+	ScoreMxs.push_back(GetScoreMx(FEATURE_SS3));
+	ScoreMxs.push_back(GetScoreMx(FEATURE_NENSS3));
+	ScoreMxs.push_back(GetScoreMx(FEATURE_RENDist4));
 
 	DSS D;
 	DSSParams Params;
 	D.SetParams(Params);
-	uint AS = D.GetAlphaSize(FEATURE_Mu);
-	vector<vector<float> > MuMx(AS);
+	uint AS = GetFreqVec(FEATURE_Mu).size();
+	SquareMatrix<float> MuMx = SquareMatrix<float>::Allocate(AS);
 	for (uint i = 0; i < AS; ++i)
 		{
-		MuMx[i].resize(AS);
-
+		SquareMatrix<feature_t>& ScoreMx = ScoreMxs[i];
 		vector<uint> Lettersi;
 		D.GetMuLetters(i, Lettersi);
 		asserta(SIZE(Lettersi) == NF);
@@ -69,7 +68,7 @@ void cmd_musubstmx()
 				{
 				uint Letteri = Lettersi[k];
 				uint Letterj = Lettersj[k];
-				Score += ScoreMxs[k][Letteri][Letterj];
+				Score += ScoreMx[Letteri][Letterj];
 				}
 			MuMx[i][j] = Score;
 			}
