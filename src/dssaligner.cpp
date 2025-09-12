@@ -1,5 +1,4 @@
 #include "myutils.h"
-#include "arrays.h"
 #include "dssaligner.h"
 #include "pdbchain.h"
 #include "alpha.h"
@@ -18,7 +17,7 @@ mutex DSSAligner::m_OutputLock;
 uint SWFastPinopGapless(const int8_t * const *AP, uint LA,
   const int8_t *B, uint LB);
 void LogAln(const char *A, const char *B, const char *Path, unsigned ColCount);
-float SWFast(XDPMem &Mem, const float *SMxData, uint LA, uint LB,
+float SWFast(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB,
   float Open, float Ext, uint &Loi, uint &Loj, uint &Leni, uint &Lenj,
   string &Path);
 float SWFastGapless(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB,
@@ -378,7 +377,7 @@ void DSSAligner::SetSMx_QRev()
 	for (uint PosA = 0; PosA < LA; ++PosA)
 		{
 		byte ia = (*m_ProfileA)[0][PosA];
-		float *SimRow = m_SMx.data() + PosA * m_SMx.Cols();
+		span<float> SimRow = m_SMx[PosA];
 		const float *ScoreMxRow = ScoreMx0[ia];
 
 		for (uint PosB = 0; PosB < LA; ++PosB)
@@ -399,7 +398,7 @@ void DSSAligner::SetSMx_QRev()
 		for (uint PosA = 0; PosA < LA; ++PosA)
 			{
 			byte ia = (*m_ProfileA)[FeatureIdx][PosA];
-			float *SimRow = m_SMx.data() + PosA * m_SMx.Cols();
+			span<float> SimRow = m_SMx[PosA];
 			const float *ScoreMxRow = ScoreMx[ia];
 
 			for (uint PosB = 0; PosB < LA; ++PosB)
@@ -418,7 +417,7 @@ void DSSAligner::SetSMx_QRev()
 		{
 		for (uint PosB = 0; PosB < LA; ++PosB)
 			{
-			float MatchScore = m_SMx[PosA][PosB];
+			float MatchScore = m_SMx.data()[PosA * m_SMx.Cols() + PosB];
 			float MatchScore2 = GetScorePosPair(*m_ProfileA, *m_ProfileA, PosA, LA-1-PosB);
 			asserta(feq(MatchScore2, MatchScore));
 			}
@@ -558,7 +557,7 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 	for (uint PosA = 0; PosA < LA; ++PosA)
 		{
 		byte ia = ProfRowA[PosA];
-		float *SimRow = m_SMx.data() + PosA * m_SMx.Cols();
+		span<float> SimRow = m_SMx[PosA];
 		assert(ia < AlphaSize0);
 		const float *ScoreMxRow = ScoreMx0[ia];
 
@@ -583,7 +582,7 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 			byte ia = ProfRowA[PosA];
 			assert(ia < AlphaSize);
 			const float *ScoreMxRow = ScoreMx[ia];
-			float *SimRow = m_SMx.data() + PosA * m_SMx.Cols();
+			span<float> SimRow = m_SMx[PosA];
 
 			for (uint PosB = 0; PosB < LB; ++PosB)
 				{
@@ -602,7 +601,7 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 		{
 		for (uint PosB = 0; PosB < LB; ++PosB)
 			{
-			float MatchScore = m_SMx[PosA][PosB];
+			float MatchScore = m_SMx.data()[PosA * m_SMx.Cols() + PosB];
 			float MatchScore2 = GetScorePosPair(ProfileA, ProfileB, PosA, PosB);
 			asserta(feq(MatchScore2, MatchScore));
 			}
@@ -776,7 +775,7 @@ void DSSAligner::AlignQueryTarget_Trace()
 	const uint LB = m_ChainB->GetSeqLength();
 
 	uint Leni, Lenj;
-	m_AlnFwdScore = SWFast(m_Mem, GetSMxData(), LA, LB,
+	m_AlnFwdScore = SWFast(m_Mem, GetSMx(), LA, LB,
 	  m_Params->m_GapOpen, m_Params->m_GapExt,
 	  m_LoA, m_LoB, Leni, Lenj, m_Path);
 
@@ -941,7 +940,7 @@ void DSSAligner::Align_NoAccel()
 
 	StartTimer(SWFwd);
 	uint Leni, Lenj;
-	m_AlnFwdScore = SWFast(m_Mem, GetSMxData(), LA, LB,
+	m_AlnFwdScore = SWFast(m_Mem, GetSMx(), LA, LB,
 	  m_Params->m_GapOpen, m_Params->m_GapExt,
 	  m_LoA, m_LoB, Leni, Lenj, m_Path);
 	EndTimer(SWFwd);
@@ -961,7 +960,7 @@ void DSSAligner::Align_QRev()
 
 	StartTimer(SWFwd);
 	uint Leni, Lenj;
-	m_AlnFwdScore = SWFast(m_Mem, GetSMxData(), LA, LA,
+	m_AlnFwdScore = SWFast(m_Mem, GetSMx(), LA, LA,
 	  m_Params->m_GapOpen, m_Params->m_GapExt,
 	  m_LoA, m_LoB, Leni, Lenj, m_Path);
 	EndTimer(SWFwd);
@@ -1417,14 +1416,14 @@ void DSSAligner::PostAlignMKF()
 	CalcEvalue();
 	}
 
-const float *DSSAligner::GetSMxData() const
+const Matrix<float> &DSSAligner::GetSMx() const
 	{
-	return m_SMx.data();
+	return m_SMx;
 	}
 
-float *DSSAligner::GetSMxData()
+Matrix<float> &DSSAligner::GetSMx()
 	{
-	return m_SMx.data();
+	return m_SMx;
 	}
 
 void DSSAligner::AllocSMxData(uint LA, uint LB)
@@ -1432,6 +1431,7 @@ void DSSAligner::AllocSMxData(uint LA, uint LB)
 	if (LA <= (2*m_SMx.Rows())/3 && LB <= (2*m_SMx.Cols())/3)
 		return;
 
+	FreeSMxData();
 	m_SMx = Matrix<float>::Allocate(LA, LB);
 	}
 

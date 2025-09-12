@@ -107,7 +107,7 @@ public:
 		}
 	};
 
-float SWFast(XDPMem &Mem, const float *SMxData, uint LA, uint LB,
+float SWFast(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB,
   float Open, float Ext, uint &Loi, uint &Loj, uint &Leni, uint &Lenj,
   string &Path);
 

@@ -1,5 +1,4 @@
 #include "myutils.h"
-#include "arrays.h"
 #include "tracebit.h"
 #include "xdpmem.h"
 #include "swtrace.h"
@@ -76,7 +75,7 @@ void TraceBackBitSW(XDPMem &Mem,
 		}
 	}
 
-float SWFast(XDPMem &Mem, const float *SMxData, uint LA, uint LB,
+float SWFast(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB,
   float Open, float Ext, uint &Loi, uint &Loj, uint &Leni, uint &Lenj,
   string &Path)
 	{
@@ -118,7 +117,7 @@ float SWFast(XDPMem &Mem, const float *SMxData, uint LA, uint LB,
 	float M0 = float (0);
 	for (uint i = 0; i < LA; ++i)
 		{
-		const float *SMxRow = SMxData + i * LB;
+		const float *SMxRow = SMx[i].data();
 		float I0 = MINUS_INFINITY;
 		span<byte> TBrow = TB[i];
 		for (uint j = 0; j < LB; ++j)

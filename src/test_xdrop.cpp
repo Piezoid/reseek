@@ -99,7 +99,7 @@ static void Test(const string &A, const string &B)
 	uint Loi, Loj, Leni, Lenj;
 	Log("______________________________SWFast________________________\n");
 	float SWScore =
-	  SWFast(Mem, SMx.data(), LA, LB, Open, Ext, Loi, Loj, Leni, Lenj, SWPath);
+	  SWFast(Mem, SMx, LA, LB, Open, Ext, Loi, Loj, Leni, Lenj, SWPath);
 	uint LoA = Loi;
 	uint LoB = Loj;
 	ProgressLog("SW score = %.3g Path = %s\n", SWScore, SWPath.c_str());
