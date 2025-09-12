@@ -10,7 +10,7 @@ void TraceBackBitSW(XDPMem &Mem,
   uint &Leni, uint &Lenj, string &Path)
 	{
 	Path.clear();
-	byte **TB = Mem.GetTBBit();
+	Matrix<byte>& TB = Mem.GetTBBit();;
 
 #if TRACE && !DOTONLY
 	Log("\n");
@@ -95,7 +95,7 @@ float SWFast(XDPMem &Mem, const float * const *SMxData, uint LA, uint LB,
 
 	float *Mrow = Mem.GetDPRow1();
 	float *Drow = Mem.GetDPRow2();
-	byte **TB = Mem.GetTBBit();
+	Matrix<byte>& TB = Mem.GetTBBit();;
 	INIT_TRACE(LA, LB, TB);
 
 // Use Mrow[-1], so...
@@ -120,7 +120,7 @@ float SWFast(XDPMem &Mem, const float * const *SMxData, uint LA, uint LB,
 		{
 		const float *SMxRow = SMxData[i];
 		float I0 = MINUS_INFINITY;
-		byte *TBrow = TB[i];
+		span<byte> TBrow = TB[i];
 		for (uint j = 0; j < LB; ++j)
 			{
 			byte TraceBits = 0;

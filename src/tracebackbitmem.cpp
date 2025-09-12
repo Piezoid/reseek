@@ -8,7 +8,7 @@
 void TraceBackBitMem(XDPMem &Mem, uint LA, uint LB, char State, string &Path)
 	{
 	Path.clear();
-	byte **TB = Mem.GetTBBit();
+	Matrix<byte>& TB = Mem.GetTBBit();
 
 #if	TRACE
 	Log("\n");

@@ -3,7 +3,7 @@
 #define TRACE	0
 #define DOTONLY	0
 
-static inline char GetTBBitM(byte **TB, uint i, uint j)
+static inline char GetTBBitM(const Matrix<byte>& TB, uint i, uint j)
 	{
 	byte c = TB[i][j];
 #if	DEBUG
@@ -17,7 +17,7 @@ static inline char GetTBBitM(byte **TB, uint i, uint j)
 	return 'M';
 	}
 
-static inline char GetTBBitD(byte **TB, uint i, uint j)
+static inline char GetTBBitD(const Matrix<byte>& TB, uint i, uint j)
 	{
 	byte c = TB[i][j+1];
 #if	DEBUG
@@ -29,7 +29,7 @@ static inline char GetTBBitD(byte **TB, uint i, uint j)
 	return 'D';
 	}
 
-static inline char GetTBBitI(byte **TB, uint i, uint j)
+static inline char GetTBBitI(const Matrix<byte>& TB, uint i, uint j)
 	{
 	byte c = TB[i+1][j];
 #if	DEBUG
@@ -43,9 +43,9 @@ static inline char GetTBBitI(byte **TB, uint i, uint j)
 
 #if TRACE
 
-static inline char GetTBBitM(byte **TB, uint i, uint j);
-static inline char GetTBBitD(byte **TB, uint i, uint j);
-static inline char GetTBBitI(byte **TB, uint i, uint j);
+static inline char GetTBBitM(const Matrix<byte>& TB, uint i, uint j);
+static inline char GetTBBitD(const Matrix<byte>& TB, uint i, uint j);
+static inline char GetTBBitI(const Matrix<byte>& TB, uint i, uint j);
 
 static uint g_LA;
 static uint g_LB;
@@ -53,7 +53,7 @@ static vector<vector<float> > g_TraceSub;
 static vector<vector<float> > g_TraceM;
 static vector<vector<float> > g_TraceD;
 
-static void INIT_TRACE(uint LA, uint LB, byte **TB)
+static void INIT_TRACE(uint LA, uint LB, Matrix<byte>& TB)
 	{
 	g_LA = LA;
 	g_LB = LB;
@@ -129,7 +129,7 @@ static void LogMx(const string &Name, const vector<vector<float> > &Mx)
 		}
 	}
 
-static void DONE_TRACE(float BestScore, uint i, uint j, byte **TB)
+static void DONE_TRACE(float BestScore, uint i, uint j, const Matrix<byte>& TB)
 	{
 #if DOTONLY
 	Log(" _");

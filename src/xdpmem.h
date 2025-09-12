@@ -1,7 +1,7 @@
 #ifndef xdpmem_h
 #define xdpmem_h
 
-#include "mx.h"
+#include "arrays.h"
 
 static const float MINUS_INFINITY = -9e9f;
 static const float UNINIT = -8e8f;
@@ -17,7 +17,7 @@ class XDPMem
 public:
 	unsigned m_LA = 0;
 	unsigned m_LB = 0;
-	Mx<byte> m_TBBit;
+	Matrix<byte> m_TBBit;
 	byte *m_RevA = 0;
 	byte *m_RevB = 0;
 	float *m_Buffer1 = 0;
@@ -25,7 +25,7 @@ public:
 	int *m_Buffer1_Int = 0;
 
 private:
-	XDPMem(const XDPMem &);
+	XDPMem(const XDPMem &) = delete;
 
 public:
 	XDPMem()
@@ -51,8 +51,6 @@ public:
 		myfree(m_Buffer1_Int);
 		myfree(m_RevA);
 		myfree(m_RevB);
-
-		m_TBBit.Clear();
 		
 		m_LA = 0;
 		m_LB = 0;
@@ -61,6 +59,7 @@ public:
 		m_Buffer1 = 0;
 		m_Buffer2 = 0;
 		m_Buffer1_Int = 0;
+		m_TBBit = Matrix<byte>();
 		}
 
 	byte *GetRevA()
@@ -73,9 +72,9 @@ public:
 		return m_RevB;
 		}
 
-	byte **GetTBBit()
+	Matrix<byte>& GetTBBit()
 		{
-		return m_TBBit.GetData();
+		return m_TBBit;
 		}
 
 	int *GetDPRow1Int()
@@ -98,8 +97,8 @@ public:
 		Clear();
 		m_LA = LA;
 		m_LB = LB;
-		m_TBBit.Alloc(LA+8, LB+8, __FILE__, __LINE__);
 
+		m_TBBit = m_TBBit.Allocate(LA+8, LB+8);
 		m_Buffer1 = myalloc(float, LB+8);
 		m_Buffer1_Int = myalloc(int, m_LB+8);
 		m_Buffer2 = myalloc(float, m_LB+8);

@@ -10,7 +10,7 @@ void GetPathCounts(const string &Path, uint &M, uint &D, uint &I);
 static void TraceBack(XDPMem &Mem, uint Besti, uint Bestj, string &Path)
 	{
 	Path.clear();
-	byte **TB = Mem.GetTBBit();
+	Matrix<byte>& TB = Mem.GetTBBit();;
 	uint i = Besti;
 	uint j = Bestj;
 	char State = 'M';
@@ -99,7 +99,7 @@ float XDropFwd(XDPMem &Mem,
 
 	Mem.Alloc(LA+1, LB+1);
 
-	byte **TB = Mem.GetTBBit();
+	Matrix<byte>& TB = Mem.GetTBBit();;
 	INIT_TRACE(LA, LB, TB);
 
 	float *Mrow = Mem.GetDPRow1();
@@ -157,7 +157,7 @@ float XDropFwd(XDPMem &Mem,
 
 		float I0 = MINUS_INFINITY;
 
-		byte *TBrow = TB[i];
+		span<byte> TBrow = TB[i];;
 		asserta(jlo>0);
 		asserta(jlo<=jhi);
 		float SavedM0 = UNINIT;

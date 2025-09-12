@@ -1,5 +1,6 @@
 #include "myutils.h"
 #include "xdpmem.h"
+#include "mx.h"
 
 void SetBLOSUM62();
 float GetBlosum62Score(char a, char b);
