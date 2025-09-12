@@ -9,6 +9,7 @@ private:
     size_t m_size;
 
 public:
+    span() : m_data(nullptr), m_size(0) {}
     span(T *data, size_t size) : m_data(data), m_size(size) {}
     T *data() const { return m_data; }
     size_t size() const { return m_size; }
@@ -146,5 +147,5 @@ template<class T> class SquareMatrix {
         span<T> operator[](uint row) { return span<T>(m_data + (size_t) row * (size_t) m_size, m_size); }
         span<const T> operator[](uint row) const { return span<const T>(m_data + (size_t) row * (size_t) m_size, m_size); }
 
-        ~SquareMatrix() { if (m_OwnData) myfree(m_data); }
+        ~SquareMatrix() { if (m_OwnData) myfree((void*) m_data); }
     };
