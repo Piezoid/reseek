@@ -1,6 +1,8 @@
 #ifndef xdpmem_h
 #define xdpmem_h
 
+#include "arrays.h"
+
 
 static const float MINUS_INFINITY = -9e9f;
 static const float UNINIT = -8e8f;
@@ -45,7 +47,6 @@ public:
 
 	void Clear()
 		{
-		m_TBBit = {};
 		myfree(m_Buffer1);
 		myfree(m_Buffer2);
 		myfree(m_Buffer1_Int);
