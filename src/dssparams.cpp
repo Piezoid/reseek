@@ -250,48 +250,30 @@ void DSSParams::NormalizeWeights()
 
 DSSParams::~DSSParams()
 	{
-	uint FeatureCount = GetFeatureCount();
-	if (!m_OwnScoreMxs)
-		return;
-	for (uint Idx = 0; Idx < FeatureCount; ++Idx)
-		{
-		FEATURE F = m_Features[Idx];
-		asserta(uint(F) < FEATURE_COUNT);
-		uint AS = g_AlphaSizes2[F];
-		for (uint Letter1 = 0; Letter1 < AS; ++Letter1)
-			{
-			asserta(m_ScoreMxs[F][Letter1] != 0);
-			myfree(m_ScoreMxs[F][Letter1]);
-			}
-		asserta(m_ScoreMxs[F] != 0);
-		myfree(m_ScoreMxs[F]);
-		}
-	myfree(m_ScoreMxs);
+	if (m_OwnScoreMxs && m_ScoreMxs != nullptr) {
+		delete[] m_ScoreMxs;
+		m_ScoreMxs = nullptr;
+	}
+	m_OwnScoreMxs = false;
 	}
 
 void DSSParams::InitScoreMxs()
 	{
-	if (m_ScoreMxs != 0)
+	if (m_ScoreMxs != nullptr)
 		return;
 	uint FeatureCount = GetFeatureCount();
-	m_ScoreMxs = myalloc(float **, FEATURE_COUNT);
-	for (uint i = 0; i < FEATURE_COUNT; ++i)
-		m_ScoreMxs[i] = 0;
+	m_ScoreMxs = new Matrix<float>[FEATURE_COUNT];
 	for (uint Idx = 0; Idx < FeatureCount; ++Idx)
 		{
 		FEATURE F = m_Features[Idx];
 		asserta(uint(F) < FEATURE_COUNT);
 		uint AS = g_AlphaSizes2[F];
-		asserta(m_ScoreMxs[F] == 0);
-		m_ScoreMxs[F] = myalloc(float *, AS);
-		for (uint Letter1 = 0; Letter1 < AS; ++Letter1)
-			{
-			m_ScoreMxs[F][Letter1] = myalloc(float, AS);
+		m_ScoreMxs[F] = Matrix<float>::Allocate(AS, AS);
 #if DEBUG
+		for (uint Letter1 = 0; Letter1 < AS; ++Letter1)
 			for (uint Letter2 = 0; Letter2 < AS; ++Letter2)
 				m_ScoreMxs[F][Letter1][Letter2] = FLT_MAX;
 #endif
-			}
 		}
 	ApplyWeights();
 	m_OwnScoreMxs = true;
@@ -343,7 +325,7 @@ void DSSParams::InitScoreMxs()
 
 void DSSParams::ApplyWeights()
 	{
-	asserta(m_ScoreMxs != 0);
+	asserta(m_ScoreMxs != nullptr);
 	uint FeatureCount = GetFeatureCount();
 	for (uint Idx = 0; Idx < FeatureCount; ++Idx)
 		{
@@ -353,12 +335,19 @@ void DSSParams::ApplyWeights()
 		uint AS = g_AlphaSizes2[F];
 		if (AS == 0)
 			Die("Feature %s not supported", FeatureToStr(F));
-		m_ScoreMxs[F] = myalloc(float *, AS);
+		
+		if (m_ScoreMxs[F].Rows() != AS || m_ScoreMxs[F].Cols() != AS) {
+			m_ScoreMxs[F].~Matrix();
+			m_ScoreMxs[F] = Matrix<float>::Allocate(AS, AS);
+		}
+
+		Matrix<float> &SMx = m_ScoreMxs[F];
+
 		for (uint Letter1 = 0; Letter1 < AS; ++Letter1)
 			{
-			m_ScoreMxs[F][Letter1] = myalloc(float, AS);
+			span<float> SMxRow = SMx[Letter1];
 			for (uint Letter2 = 0; Letter2 < AS; ++Letter2)
-				m_ScoreMxs[F][Letter1][Letter2] = w*g_ScoreMxs2[F][Letter1][Letter2];
+				SMxRow[Letter2] = w*g_ScoreMxs2[F][Letter1][Letter2];
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "features.h"
+#include "arrays.h"
 
 #define SLOPE_CALIB		0
 #define GUMBEL_CALIB	0
@@ -38,7 +39,7 @@ public:
 	float m_OmegaFwd = FLT_MAX;
 	string m_MKFPatternStr = "";
 	string m_MuPrefPatternStr = "";
-	float ***m_ScoreMxs = 0;
+	Matrix<float>* m_ScoreMxs = nullptr;
 	bool m_OwnScoreMxs = false;
 
 	bool m_UsePara = true;

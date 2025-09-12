@@ -71,7 +71,7 @@ void cmd_pdb2mega()
 				}
 			fprintf(fOut, "\n");
 			}
-		float **ScoreMx = Params.m_ScoreMxs[F];
+		const Matrix<float> &ScoreMx = Params.m_ScoreMxs[F];
 		fprintf(fOut, "logoddsmx\n");
 		for (uint Letter1 = 0; Letter1 < AlphaSize; ++Letter1)
 			{

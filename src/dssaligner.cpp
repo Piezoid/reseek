@@ -1,16 +1,15 @@
 #include "myutils.h"
+#include "arrays.h"
 #include "dssaligner.h"
 #include "pdbchain.h"
-#include "alpha.h"
 #include "xdpmem.h"
 #include "timing.h"
 #include "mumx.h"
-#include "cigar.h"
 #include "parasail.h"
 #include "statsig.h"
-#include <thread>
 #include <set>
 #include <mutex>
+#include <array>
 
 mutex DSSAligner::m_OutputLock;
 
@@ -332,12 +331,12 @@ float DSSAligner::GetScorePosPair(const Matrix<byte> &ProfileA,
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
 		//float **ScoreMx = g_ScoreMxs2[F];
-		float **ScoreMx = m_Params->m_ScoreMxs[F];
+		const Matrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
 		const span<const byte> ProfRowA = ProfileA[FeatureIdx];
 		const span<const byte> ProfRowB = ProfileB[FeatureIdx];
 		byte ia = ProfRowA[PosA];
 		assert(ia < AlphaSize);
-		const float *ScoreMxRow = ScoreMx[ia];
+		span<const float> ScoreMxRow = ScoreMx[ia];
 		byte ib = ProfRowB[PosB];
 		assert(ib < AlphaSize);
 		MatchScore += ScoreMxRow[ib];
@@ -372,13 +371,13 @@ void DSSAligner::SetSMx_QRev()
 // Special case first feature because = not += and
 	FEATURE F0 = m_Params->m_Features[0];
 	uint AlphaSize0 = g_AlphaSizes2[F0];
-	float **ScoreMx0 = m_Params->m_ScoreMxs[F0];
+	const Matrix<float> &ScoreMx0 = m_Params->m_ScoreMxs[F0];
 	//const vector<byte> &ProfRowA = (*m_ProfileA)[0];
 	for (uint PosA = 0; PosA < LA; ++PosA)
 		{
 		byte ia = (*m_ProfileA)[0][PosA];
 		span<float> SimRow = m_SMx[PosA];
-		const float *ScoreMxRow = ScoreMx0[ia];
+		span<const float> ScoreMxRow = ScoreMx0[ia];
 
 		for (uint PosB = 0; PosB < LA; ++PosB)
 			{
@@ -393,13 +392,13 @@ void DSSAligner::SetSMx_QRev()
 		{
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
-		float **ScoreMx = m_Params->m_ScoreMxs[F];
+		const Matrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
 		//const vector<byte> &ProfRowA = (*m_ProfileA)[FeatureIdx];
 		for (uint PosA = 0; PosA < LA; ++PosA)
 			{
 			byte ia = (*m_ProfileA)[FeatureIdx][PosA];
 			span<float> SimRow = m_SMx[PosA];
-			const float *ScoreMxRow = ScoreMx[ia];
+			span<const float> ScoreMxRow = ScoreMx[ia];
 
 			for (uint PosB = 0; PosB < LA; ++PosB)
 				{
@@ -417,7 +416,7 @@ void DSSAligner::SetSMx_QRev()
 		{
 		for (uint PosB = 0; PosB < LA; ++PosB)
 			{
-			float MatchScore = m_SMx.data()[PosA * m_SMx.Cols() + PosB];
+			float MatchScore = m_SMx[PosA][PosB];
 			float MatchScore2 = GetScorePosPair(*m_ProfileA, *m_ProfileA, PosA, LA-1-PosB);
 			asserta(feq(MatchScore2, MatchScore));
 			}
@@ -499,7 +498,7 @@ float DSSAligner::GetMegaHSPScore(uint Lo_i, uint Lo_j, uint Len)
 // Special case first feature because = not += and
 	FEATURE F0 = m_Params->m_Features[0];
 	uint AlphaSize0 = g_AlphaSizes2[F0];
-	float **ScoreMx0 = m_Params->m_ScoreMxs[F0];
+	const Matrix<float> &ScoreMx0 = m_Params->m_ScoreMxs[F0];
 	const span<const byte> ProfRowA = ProfileA[0];
 	const span<const byte> ProfRowB = ProfileB[0];
 	float Total = 0;
@@ -507,7 +506,7 @@ float DSSAligner::GetMegaHSPScore(uint Lo_i, uint Lo_j, uint Len)
 		{
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
-		float **ScoreMx = m_Params->m_ScoreMxs[F];
+		const Matrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
 		const span<const byte> ProfRowA = ProfileA[FeatureIdx];
 		const span<const byte> ProfRowB = ProfileB[FeatureIdx];
 		for (uint k = 0; k < Len; ++k)
@@ -515,7 +514,7 @@ float DSSAligner::GetMegaHSPScore(uint Lo_i, uint Lo_j, uint Len)
 			uint PosA = uint(Lo_i + k);
 			byte ia = ProfRowA[PosA];
 			assert(ia < AlphaSize);
-			const float *ScoreMxRow = ScoreMx[ia];
+			span<const float> ScoreMxRow = ScoreMx[ia];
 
 			uint PosB = uint(Lo_j + k);
 			byte ib = ProfRowB[PosB];
@@ -551,7 +550,7 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 // Special case first feature because = not += and
 	FEATURE F0 = m_Params->m_Features[0];
 	uint AlphaSize0 = g_AlphaSizes2[F0];
-	float **ScoreMx0 = m_Params->m_ScoreMxs[F0];
+	const Matrix<float> &ScoreMx0 = m_Params->m_ScoreMxs[F0];
 	const span<const byte> ProfRowA = ProfileA[0];
 	const span<const byte> ProfRowB = ProfileB[0];
 	for (uint PosA = 0; PosA < LA; ++PosA)
@@ -559,7 +558,7 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 		byte ia = ProfRowA[PosA];
 		span<float> SimRow = m_SMx[PosA];
 		assert(ia < AlphaSize0);
-		const float *ScoreMxRow = ScoreMx0[ia];
+		span<const float> ScoreMxRow = ScoreMx0[ia];
 
 		for (uint PosB = 0; PosB < LB; ++PosB)
 			{
@@ -574,14 +573,14 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 		{
 		FEATURE F = m_Params->m_Features[FeatureIdx];
 		uint AlphaSize = g_AlphaSizes2[F];
-		float **ScoreMx = m_Params->m_ScoreMxs[F];
+		const Matrix<float> &ScoreMx = m_Params->m_ScoreMxs[F];
 		const span<const byte> ProfRowA = ProfileA[FeatureIdx];
 		const span<const byte> ProfRowB = ProfileB[FeatureIdx];
 		for (uint PosA = 0; PosA < LA; ++PosA)
 			{
 			byte ia = ProfRowA[PosA];
 			assert(ia < AlphaSize);
-			const float *ScoreMxRow = ScoreMx[ia];
+			span<const float> ScoreMxRow = ScoreMx[ia];
 			span<float> SimRow = m_SMx[PosA];
 
 			for (uint PosB = 0; PosB < LB; ++PosB)
@@ -601,7 +600,7 @@ void DSSAligner::SetSMx_NoRev(const DSSParams &Params,
 		{
 		for (uint PosB = 0; PosB < LB; ++PosB)
 			{
-			float MatchScore = m_SMx.data()[PosA * m_SMx.Cols() + PosB];
+			float MatchScore = m_SMx[PosA][PosB];
 			float MatchScore2 = GetScorePosPair(ProfileA, ProfileB, PosA, PosB);
 			asserta(feq(MatchScore2, MatchScore));
 			}
