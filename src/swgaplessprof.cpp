@@ -9,8 +9,8 @@ extern float B62Mf[20][20];
 float SWGapless(Matrix<float> &DPMx, const Matrix<float> &SMx, uint LA, uint LB,
   uint &Loi, uint &Loj, uint &ColCount);
 
-static float SWFastGaplessProf(XDPMem &Mem, const float * const *ProfA, uint LA,
-  const byte *B, uint LB, uint &Besti, uint &Bestj)
+static float SWFastGaplessProf(XDPMem &Mem, Matrix<float> &ProfA, uint LA,
+  std::vector<byte>& B, uint LB, uint &Besti, uint &Bestj)
 	{
 	Mem.Alloc(LA+1, LB+1);
 
@@ -30,7 +30,7 @@ static float SWFastGaplessProf(XDPMem &Mem, const float * const *ProfA, uint LA,
 	float M0 = float (0);
 	for (uint i = 0; i < LA; ++i)
 		{
-		const float *SMxRow = ProfA[i];
+		span<float> SMxRow = ProfA[i];
 		for (uint j = 0; j < LB; ++j)
 			{
 			float SavedM0 = M0;
@@ -91,16 +91,19 @@ static void MakeBlosumS(const string &A, const string &B,
 		}
 	}
 
-static void MakeProf(const string &A, vector<const float *> &Prof)
+static void MakeProf(const string &A, Matrix<float> &Prof)
 	{
 	uint LA = SIZE(A);
-	Prof.resize(LA);
+	Prof = Matrix<float>::Allocate(LA, 20);
 	for (uint i = 0; i < LA; ++i)
 		{
 		char a = A[i];
 		uint ai = g_CharToLetterAmino[a];
 		asserta(ai < 20);
-		Prof[i] = B62Mf[ai];
+		for (uint j = 0; j < 20; ++j)
+			{
+			Prof[i][j] = B62Mf[ai][j];
+			}
 		}
 	}
 
@@ -131,7 +134,7 @@ static void Test2(const string &A, const string &B)
 	Matrix<float> DPMx;
 	MakeBlosumS(A, B, SMx);
 
-	vector<const float *> ProfA;
+	Matrix<float> ProfA;
 	MakeProf(A, ProfA);
 
 	vector<byte> Bi;
@@ -154,7 +157,7 @@ static void Test2(const string &A, const string &B)
 
 	XDPMem Mem;
 	uint Besti, Bestj;
-	float Score2 = SWFastGaplessProf(Mem, ProfA.data(), LA, Bi.data(), LB, Besti, Bestj);
+	float Score2 = SWFastGaplessProf(Mem, ProfA, LA, Bi, LB, Besti, Bestj);
 	Log("Score2 %.1f, %u, %u\n", Score2, Besti, Bestj);
 	asserta(feq(Score, Score2));
 	}

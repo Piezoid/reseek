@@ -11,7 +11,6 @@ int SWFastGapless_Int(XDPMem &Mem, const Matrix<int8_t> &SMx, uint LA, uint LB,
 	asserta(SMx.Rows() == LA);
 	asserta(SMx.Cols() == LB);
 	// Use Matrix directly - need to change function signature
-	const int8_t *SMxData = SMx.data();
 
 	Besti = UINT_MAX;
 	Bestj = UINT_MAX;
@@ -29,7 +28,7 @@ int SWFastGapless_Int(XDPMem &Mem, const Matrix<int8_t> &SMx, uint LA, uint LB,
 	int M0 = 0;
 	for (uint i = 0; i < LA; ++i)
 		{
-		const int8_t *SMxRow = SMxData + i * LB;
+		span<const int8_t> SMxRow = SMx[i];
 		for (uint j = 0; j < LB; ++j)
 			{
 			int SavedM0 = M0;

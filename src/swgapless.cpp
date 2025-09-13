@@ -11,8 +11,6 @@ static float SWGaplessNoTB(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint 
 #endif
 
 	Mem.Alloc(LA+32, LB+32);
-	// Use Matrix directly - need to change function signature
-	const float *SMxData = SMx.data();
 
 	float *Mrow = Mem.GetDPRow1();
 
@@ -24,7 +22,7 @@ static float SWGaplessNoTB(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint 
 	float M0 = float(0);
 	for (uint i = 0; i < LA; ++i)
 		{
-		const float *SMxRow = SMxData + i * LB;
+		span<const float> SMxRow = SMx[i];
 		float I0 = MINUS_INFINITY;
 		for (uint j = 0; j < LB; ++j)
 			{
@@ -50,8 +48,6 @@ float SWFastGapless(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB,
 	Mem.Alloc(LA+1, LB+1);
 	asserta(SMx.Rows() == LA);
 	asserta(SMx.Cols() == LB);
-	// Use Matrix directly - need to change function signature
-	const float *SMxData = SMx.data();
 
 	Besti = UINT_MAX;
 	Bestj = UINT_MAX;
@@ -69,7 +65,7 @@ float SWFastGapless(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB,
 	float M0 = float (0);
 	for (uint i = 0; i < LA; ++i)
 		{
-		const float *SMxRow = SMxData + i * LB;
+		span<const float> SMxRow = SMx[i];
 		for (uint j = 0; j < LB; ++j)
 			{
 			float SavedM0 = M0;
