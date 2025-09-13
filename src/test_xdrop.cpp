@@ -1,9 +1,8 @@
 #include "myutils.h"
 #include "arrays.h"
 #include "xdpmem.h"
+#include "blosum62.h"
 
-void SetBLOSUM62();
-float GetBlosum62Score(char a, char b);
 void MergeFwdBwd(uint LA, uint LB,
   uint FwdLoA, uint FwdLoB, const string &FwdPath,
   uint BwdHiA, uint BwdHiB, const string &BwdPath,
@@ -18,7 +17,7 @@ static float SubFn(void *UserData, uint PosA, uint PosB)
 	asserta(PosB < SIZE(*ptrB));
 	char a = (*ptrA)[PosA];
 	char b = (*ptrB)[PosB];
-	float Score = GetBlosum62Score(a, b);
+	float Score = float(GetBlosum62Score(a, b));
 	return Score;
 	}
 

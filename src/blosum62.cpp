@@ -2,9 +2,11 @@
 #include "arrays.h"
 #include "alpha.h"
 #include <mutex>
+#include "blosum62.h"
 
-SquareMatrix<float> g_SubstMxf;
-float *g_SubstMx;
+
+
+SquareMatrix<blosum62_t> g_SubstMx;
 
 /***
 This alphabet is the one used by BLAST.
@@ -19,7 +21,7 @@ word index tables.
 static char Alphabet[] = "*ACBEDGFIHKMLNQPSRTWVYXZ";
 
 // Ye olde BLOSUM62 as used by NCBI BLAST (1/2-bit units)
-static float BLOSUM62[24][24] =
+static blosum62_t BLOSUM62[24][24] =
 	{
 //	    *    A    C    B    E    D    G    F    I    H    K    M    L    N    Q    P    S    R    T    W    V    Y    X    Z   
 	{   1,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  },  // *
@@ -48,25 +50,23 @@ static float BLOSUM62[24][24] =
 	{  -4,  -1,  -3,   1,   4,   1,  -2,  -3,  -3,   0,   1,  -1,  -3,   0,   3,  -1,   0,   0,  -1,  -3,  -2,  -2,  -1,   4,  },  // Z
 	};
 
-void SetBLOSUM62Mx(SquareMatrix<float> &Sf)
+void SetBLOSUM62Mx(SquareMatrix<blosum62_t> &Sf)
 	{
 	unsigned N = unsigned(strlen(Alphabet));
 
-	Sf = SquareMatrix<float>::Allocate(256);
+	Sf = SquareMatrix<blosum62_t>::Allocate(256);
 	// Initialize to 0
 	for (uint i = 0; i < 256; ++i) {
 		for (uint j = 0; j < 256; ++j) {
 			Sf[i][j] = 0;
 		}
 	}
-	// Use Matrix directly - need to change function signature
-	float *Data = Sf.data();
 
 	for (unsigned i = 0; i < N; ++i)
 		{
 		for (unsigned j = 0; j < N; ++j)
 			{
-			float v = BLOSUM62[i][j];
+			blosum62_t v = BLOSUM62[i][j];
 			
 			byte ui = (byte) toupper(Alphabet[i]);
 			byte uj = (byte) toupper(Alphabet[j]);
@@ -94,16 +94,14 @@ void SetBLOSUM62()
 	{
 	static mutex Lock;
 	Lock.lock();
-	if (g_SubstMx == 0)
+	if (g_SubstMx.Rows() == 0)
 		{
-		SetBLOSUM62Mx(g_SubstMxf);
-		// Use Matrix directly - need to change function signature
-		g_SubstMx = g_SubstMxf.data();
+		SetBLOSUM62Mx(g_SubstMx);
 		}
 	Lock.unlock();
 	}
 
-float GetBlosum62Score(char a, char b)
+blosum62_t GetBlosum62Score(char a, char b)
 	{
 	static bool InitDone = false;
 	if (!InitDone)
@@ -112,18 +110,18 @@ float GetBlosum62Score(char a, char b)
 		InitDone = true;
 		}
 
-	float Score = g_SubstMx[((byte)a) * 256 + (byte)b];
+	blosum62_t Score = g_SubstMx[a][b];
 	return Score;
 	}
 
-float GetBlosum62PathScore(
+int GetBlosum62PathScore(
   const string &A, uint LoA,
   const string &B, uint LoB,
   const string &Path)
 	{
-	const float Open = -10;
-	const float Ext = -1;
-	float Sum = 0;
+	const blosum62_t Open = -10;
+	const blosum62_t Ext = -1;
+	int Sum = 0;
 	uint LA = SIZE(A);
 	uint LB = SIZE(B);
 	uint PosA = LoA;

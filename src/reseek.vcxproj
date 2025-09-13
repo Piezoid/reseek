@@ -455,6 +455,7 @@
     <ClCompile Include="zutil.c" />
     <ClInclude Include="bcadata.h" />
     <ClInclude Include="binner.h" />
+    <ClInclude Include="blosum62.h" />
     <ClInclude Include="calibratesearcher.h" />
     <ClInclude Include="calibratesearcher2.h" />
     <ClInclude Include="chainbag.h" />
