@@ -17,7 +17,7 @@ static float SWFastGaplessProf(XDPMem &Mem, Matrix<float> &ProfA, uint LA,
 	Besti = UINT_MAX;
 	Bestj = UINT_MAX;
 
-	span<float> Mrow = Mem.GetDPRow1();
+	float *Mrow = Mem.GetDPRow1();
 
 // Use Mrow[-1], so...
 	Mrow[-1] = 0;

@@ -92,13 +92,13 @@ float SWFast(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB,
 	Leni = 0;
 	Lenj = 0;
 
-	span<float> Mrow = Mem.GetDPRow1();
-	span<float> Drow = Mem.GetDPRow2();
+	float *Mrow = Mem.GetDPRow1();
+	float *Drow = Mem.GetDPRow2();
 	Matrix<byte>& TB = Mem.GetTBBit();;
 	INIT_TRACE(LA, LB, TB);
 
 // Use Mrow[-1], so...
-	*(Mrow.data() - 1) = MINUS_INFINITY;
+	Mrow[-1] = MINUS_INFINITY;
 	TRACE_M(0, -1, MINUS_INFINITY);
 
 	for (uint j = 0; j <= LB; ++j)

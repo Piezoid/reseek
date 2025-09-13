@@ -43,12 +43,12 @@ float ViterbiFastMem(XDPMem &Mem, uint LA, uint LB,
 	float Open = s_TermOpen;
 	float Ext = s_TermExt;
 
-	span<float> Mrow = Mem.GetDPRow1();
-	span<float> Drow = Mem.GetDPRow2();
+	float *Mrow = Mem.GetDPRow1();
+	float *Drow = Mem.GetDPRow2();
 	Matrix<byte>& TB = Mem.GetTBBit();;
 
 // Use Mrow[-1], so...
-	*(Mrow.data() - 1) = MINUS_INFINITY;
+	Mrow[-1] = MINUS_INFINITY;
 	for (uint j = 0; j <= LB; ++j)
 		{
 		Mrow[j] = MINUS_INFINITY;
@@ -209,12 +209,12 @@ float ViterbiFastMem(XDPMem &Mem, const char *A, uint LA,
 	float Open = s_TermOpen;
 	float Ext = s_TermExt;
 
-	span<float> Mrow = Mem.GetDPRow1();
-	span<float> Drow = Mem.GetDPRow2();
+	float *Mrow = Mem.GetDPRow1();
+	float *Drow = Mem.GetDPRow2();
 	Matrix<byte>& TB = Mem.GetTBBit();;
 
 // Use Mrow[-1], so...
-	*(Mrow.data() - 1) = MINUS_INFINITY;
+	Mrow[-1] = MINUS_INFINITY;
 	for (uint j = 0; j <= LB; ++j)
 		{
 		Mrow[j] = MINUS_INFINITY;

@@ -15,7 +15,7 @@ int SWFastGapless_Int(XDPMem &Mem, const Matrix<int8_t> &SMx, uint LA, uint LB,
 	Besti = UINT_MAX;
 	Bestj = UINT_MAX;
 
-	span<int> Mrow = Mem.GetDPRow1Int();
+	int *Mrow = Mem.GetDPRow1Int();
 
 // Use Mrow[-1], so...
 	Mrow[-1] = MINUS_INFINITY_INT;

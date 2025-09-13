@@ -78,19 +78,19 @@ public:
 		return m_TBBit;
 		}
 
-	span<int> GetDPRow1Int()
+	int *GetDPRow1Int()
 		{
-		return span<int>(m_Buffer1_Int + 1, m_LA);
+		return m_Buffer1_Int + 1;
 		}
 
-	span<float> GetDPRow1()
+	float *GetDPRow1()
 		{
-		return span<float>(m_Buffer1 + 1, m_LA);
+		return m_Buffer1 + 1;
 		}
 
-	span<float> GetDPRow2()
+	float *GetDPRow2()
 		{
-		return span<float>(m_Buffer2 + 1, m_LB);
+		return m_Buffer2 + 1;
 		}
 
 	void Alloc(unsigned LA, unsigned LB)
