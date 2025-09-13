@@ -7,50 +7,60 @@
 
 void GetPathCounts(const string &Path, uint &M, uint &D, uint &I);
 
-static void TraceBack(XDPMem &Mem, uint Besti, uint Bestj, string &Path)
+static void TraceBack(XDPMem &Mem, uint Besti, uint Bestj, char StartState, string &Path)
 	{
 	Path.clear();
-	byte **TB = Mem.GetTBBit();
+	byte **TB_M = Mem.GetTBM();
+	byte **TB_D = Mem.GetTBD();
+	byte **TB_I = Mem.GetTBI();
 	uint i = Besti;
 	uint j = Bestj;
-	char State = 'M';
+	char State = StartState;
+	uint step = 0;
+	
+	Log("TRACEBACK_STEP: Starting at (%u,%u) state=%c\n", i, j, State);
+	
 	for (;;)
 		{
 		Path += State;
-#if TRACE && !DOTONLY
-		Log("Traceback %u, %u, %c  \"%s\"\n", i, j, State, Path.c_str());
-#endif
-		//if (i == 1 && j == 1)
-		if (i == 1 || j == 1)
-			break;
-
+		byte t; // The tracebit for the current state and cell
+		
 		char NextState = '?';
 		switch (State)
 			{
 		case 'M':
-			NextState = GetTBBitM(TB, i, j);
-#if TRACE && !DOTONLY
-			Log(" GetTBBitM(%u, %u) = %c\n", i, j, NextState);
-#endif
+			t = TB_M[i][j];
+			Log("TRACEBACK_STEP: step=%u at (%u,%u) state=%c tb=0x%02x path=\"%s\"\n", 
+				step, i, j, State, t, Path.c_str());
+			// Check for the start-of-alignment marker first.
+			if (t & TRACEBITS_SM)
+				{
+				Log("TRACEBACK_STEP: Found start-of-alignment marker, ending traceback\n");
+				goto end_traceback;
+				}
+			NextState = GetTBBitM(t);
+			Log("TRACEBACK_STEP: M->%c transition from (%u,%u)\n", NextState, i, j);
 			asserta(i > 0 && j > 0);
 			--i;
 			--j;
 			break;
 
 		case 'D':
-			NextState = GetTBBitD(TB, i, j);
-#if TRACE && !DOTONLY
-			Log(" GetTBBitD(%u, %u) = %c\n", i, j, NextState);
-#endif
+			t = TB_D[i][j];
+			Log("TRACEBACK_STEP: step=%u at (%u,%u) state=%c tb=0x%02x path=\"%s\"\n", 
+				step, i, j, State, t, Path.c_str());
+			NextState = GetTBBitD(t);
+			Log("TRACEBACK_STEP: D->%c transition from (%u,%u)\n", NextState, i, j);
 			asserta(i > 0);
 			--i;
 			break;
 
 		case 'I':
-			NextState = GetTBBitI(TB, i, j);
-#if TRACE && !DOTONLY
-			Log(" GetTBBitI(%u, %u) = %c\n", i, j, NextState);
-#endif
+			t = TB_I[i][j];
+			Log("TRACEBACK_STEP: step=%u at (%u,%u) state=%c tb=0x%02x path=\"%s\"\n", 
+				step, i, j, State, t, Path.c_str());
+			NextState = GetTBBitI(t);
+			Log("TRACEBACK_STEP: I->%c transition from (%u,%u)\n", NextState, i, j);
 			asserta(j > 0);
 			--j;
 			break;
@@ -59,11 +69,18 @@ static void TraceBack(XDPMem &Mem, uint Besti, uint Bestj, string &Path)
 			Die("TraceBackBit, invalid state %c", State);
 			}
 		State = NextState;
+		++step;
+		
+		// Safety check to prevent infinite loops
+		if (step > 10000)
+			{
+			Log("ERROR: Traceback exceeded 10000 steps, possible infinite loop\n");
+			Die("Traceback infinite loop detected");
+			}
 		}
+end_traceback:; // Label for goto.
 	std::reverse(Path.begin(), Path.end());
-#if TRACE && !DOTONLY
-	Log("Traceback = %s\n", Path.c_str());
-#endif
+	Log("TRACEBACK_COMPLETE: Final path=\"%s\" (length=%u)\n", Path.c_str(), (uint)Path.length());
 	}
 
 // After traceback start of path is *ptrSegLoA,*ptrSegLoB
@@ -99,25 +116,37 @@ float XDropFwd(XDPMem &Mem,
 
 	Mem.Alloc(LA+1, LB+1);
 
-	byte **TB = Mem.GetTBBit();
-	INIT_TRACE(LA, LB, TB);
+	byte **TB_M = Mem.GetTBM();
+	byte **TB_D = Mem.GetTBD();
+	byte **TB_I = Mem.GetTBI();
+	INIT_TRACE(LA, LB, TB_M);
+	INIT_TRACE(LA, LB, TB_D);
+	INIT_TRACE(LA, LB, TB_I);
 
 	float *Mrow = Mem.GetDPRow1();
 	float *Drow = Mem.GetDPRow2();
+	float *Irow = Mem.GetIrow();
 
 	Mrow[-1] = MINUS_INFINITY;
 	TRACE_M(0, -1, MINUS_INFINITY);
 
-	Drow[0] = MINUS_INFINITY;
-	Drow[1] = MINUS_INFINITY;
-	TRACE_D(0, 0, MINUS_INFINITY);
-	TRACE_D(0, 1, MINUS_INFINITY);
+	// Explicitly initialize all of row 0 (i=0) for local alignment
+	// This ensures proper boundary conditions regardless of band expansion
+	for (uint j = 0; j <= LB; ++j)
+		{
+		Mrow[j] = 0;           // M(0,j) = 0 for all j (local alignment boundary)
+		Drow[j] = MINUS_INFINITY; // D(0,j) = -∞ for all j (no deletions from boundary)
+		Irow[j] = MINUS_INFINITY; // I(0,j) = -∞ for all j (no insertions from boundary)
+		TRACE_M(0, j, Mrow[j]);
+		TRACE_D(0, j, Drow[j]);
+		}
 
 // Main loop
 	float BestScore = 0;
 	TRACE_M(1, 1, 0);
 	uint Besti = 0;
 	uint Bestj = 0;
+	char BestState = 'M';
 
 	uint prev_jlo = 0;
 	uint prev_jhi = 0;
@@ -148,6 +177,7 @@ float XDropFwd(XDPMem &Mem,
 			{
 			Mrow[j-1] = MINUS_INFINITY;
 			Drow[j] = MINUS_INFINITY;
+			Irow[j] = MINUS_INFINITY;
 			TRACE_M(i, j-1, MINUS_INFINITY);
 			TRACE_D(i, j, MINUS_INFINITY);
 			}
@@ -157,40 +187,82 @@ float XDropFwd(XDPMem &Mem,
 
 		float I0 = MINUS_INFINITY;
 
-		byte *TBrow = TB[i];
+		byte *TB_M_row = TB_M[i];
+		byte *TB_D_row = TB_D[i];
+		byte *TB_I_row = TB_I[i];
 		asserta(jlo>0);
 		asserta(jlo<=jhi);
 		float SavedM0 = UNINIT;
+		
+		// Canonical state variables for proper Gotoh implementation
+		// Diagonal predecessors from (i-1,j-1)
+		float m_diag = MINUS_INFINITY; // M(i-1,j-1)
+		float d_diag = MINUS_INFINITY; // D(i-1,j-1)  
+		float i_diag = MINUS_INFINITY; // I(i-1,j-1)
+		
+		// Current row I-scores (i,j-1) -> (i,j)
+		float i_curr = MINUS_INFINITY; // I(i,j-1) for current j
+		
+		// Pipeline M(i,j-1) scores within the inner loop
+		float m_left = MINUS_INFINITY; // Represents M(i, j-1)
+		
+		// Initialize diagonal predecessors for the first j in the band
+		if (jlo > 0)
+			{
+			m_diag = Mrow[jlo-1]; // M(i-1,j-1) for j=jlo
+			d_diag = (jlo > 1) ? Drow[jlo-1] : MINUS_INFINITY; // D(i-1,j-1) for j=jlo
+			i_diag = (jlo > 1) ? Irow[jlo-1] : MINUS_INFINITY; // I(i-1,j-1) for j=jlo
+			}
 
 		for (uint j = jlo; j <= jhi; ++j)
 			{
-			byte TraceBits = 0;
+			// Separate trace bits for each state
+			byte tb_m = 0; // Trace bits for M(i,j)
+			byte tb_d = 0; // Trace bits for D(i,j)  
+			byte tb_i = 0; // Trace bits for I(i,j)
 
-			SavedM0 = M0; // SavedM0 = M0 = DPM[i][j]
+			// Load pristine scores from previous row (i-1,j) before they get overwritten
+			float m_up = Mrow[j]; // M(i-1,j)
+			float d_up_pristine = Drow[j]; // D(i-1,j) - preserve before modification
+			float i_up_pristine = Irow[j]; // I(i-1,j) - preserve before modification
+			float m_new = MINUS_INFINITY; // M(i,j) - will be computed
+			
+#if DEBUG
+			// Only log cells with meaningful scores or interesting traceback patterns
+			bool has_meaningful_input = (m_diag > MINUS_INFINITY) || (d_diag > MINUS_INFINITY) || 
+										(i_diag > MINUS_INFINITY) || (m_up > MINUS_INFINITY) || 
+										(d_up_pristine > MINUS_INFINITY) || (i_up_pristine > MINUS_INFINITY) || 
+										(i_curr > MINUS_INFINITY);
+#endif
 
-		// MATCH
+		// MATCH: M(i,j) = S(A_i, B_j) + max(M(i-1,j-1), D(i-1,j-1), I(i-1,j-1), 0)
 			{
-		// M0 = DPM[i][j]
-		// I0 = DPI[i][j]
-		// Drow[j] = DPD[i][j]
-			float xM = M0;
-			if (Drow[j] > xM)
+			float xM = m_diag;
+			tb_m = 0; // Default to M->M transition
+			if (d_diag > xM)
 				{
-				xM = Drow[j];
-				TraceBits = TRACEBITS_DM;
+				xM = d_diag;
+				tb_m = TRACEBITS_DM;
 				}
-			if (I0 > xM)
+			if (i_diag > xM)
 				{
-				xM = I0;
-				TraceBits = TRACEBITS_IM;
+				xM = i_diag;
+				tb_m = TRACEBITS_IM;
 				}
-			M0 = Mrow[j]; // M0 = DPM[i][j+1]
 
-			//float s = xM + MxRow[b];
+			// Apply local alignment choice: max(0, predecessor_score)
+			// If predecessor score is negative, start a new alignment
+			if (xM < 0)
+				{
+				xM = 0;
+				tb_m = TRACEBITS_SM; // Mark as start of new alignment
+				}
+
 			float s = SubFn(UserData, LoA + i-1, LoB + j-1);
 			TRACE_Sub(i-1, j-1, s);
 			s += xM;
-			Mrow[j] = s;	// Mrow[j] = DPM[i+1][j+1]
+			
+			m_new = s; // M(i,j) - assign to outer scope variable
 			TRACE_M(i, j, s);
 
 			float h = s - BestScore + X;
@@ -226,56 +298,58 @@ float XDropFwd(XDPMem &Mem,
 					}
 				endj = new_endj;
 				}
-			if (s >= BestScore)
-				{
-				BestScore = s;
-				Besti = i;
-				Bestj = j;
-				}
 			}
 
-		// DELETE
-			if (j != jlo)
-				{
-		// SavedM0 = DPM[i][j]
-		// Drow[j] = DPD[i][j]
-			float md = SavedM0 + Open;
-			Drow[j] += Ext;
-			if (md >= Drow[j])
-				{
-				Drow[j] = md;
-				TraceBits |= TRACEBITS_MD;
-				TRACE_D(i, j, md);
-				}
-		// Drow[j] = DPD[i+1][j]
-			float h = Drow[j] - BestScore + X;
+		// DELETE: D(i,j) = max(M(i-1,j) + Open, D(i-1,j) + Ext)
+			{
+			float d_new = d_up_pristine + Ext;
+			tb_d = TRACEBITS_DD; // Explicitly set D->D (extend)
 
+			// A gap can only be opened from a valid M score.
+			if (m_up > MINUS_INFINITY)
+				{
+				float md = m_up + Open;
+				if (md >= d_new)
+					{
+					d_new = md;
+					tb_d = TRACEBITS_MD; // M->D (open)
+					}
+				}
+			Drow[j] = d_new;
+			TRACE_D(i, j, d_new);
+
+			float h = d_new - BestScore + X;
 		// Delete-Match
 			if (h > 0)
 				{
-				next_jlo = min(next_jlo, j-1);
-				next_jhi = max(next_jhi, j-1);
+				next_jlo = min(next_jlo, j);
+				next_jhi = max(next_jhi, j+1);
 				}
 			}
 			
-		// INSERT
+		// INSERT: I(i,j) = max(M(i,j-1) + Open, I(i,j-1) + Ext)
 			{
-		// SavedM0 = DPM[i][j]
-		// I0 = DPI[i][j]
-			float mi = SavedM0 + Open;
-			I0 += Ext;
-			if (mi >= I0)
-				{
-				I0 = mi;
-				TraceBits |= TRACEBITS_MI;
-				}
-		// I0 = DPI[i][j+1]
+			float i_new = i_curr + Ext;
+			tb_i = TRACEBITS_II; // Explicitly set I->I (extend)
 
-			float h = I0 - BestScore + X;
+			// A gap can only be opened from a valid M score, M(i, j-1), held in m_left.
+			if (m_left > MINUS_INFINITY)
+				{
+				float mi = m_left + Open;
+				if (mi >= i_new)
+					{
+					i_new = mi;
+					tb_i = TRACEBITS_MI; // M->I (open)
+					}
+				}
+			Irow[j] = i_new;
+			i_curr = i_new;
+
+			float h = i_curr - BestScore + X;
 		// Insert-Match
 			if (h > 0)
 				{
-				next_jlo = min(next_jlo, j+1);
+				next_jlo = min(next_jlo, j);
 				next_jhi = max(next_jhi, j+1);
 				}
 
@@ -296,20 +370,87 @@ float XDropFwd(XDPMem &Mem,
 				}
 			}
 		
-			TBrow[j] = TraceBits;
+			// Update BestScore by checking all three states for cell (i,j)
+			if (m_new >= BestScore)
+				{
+				float old_best = BestScore;
+				BestScore = m_new;
+				Besti = i;
+				Bestj = j;
+				BestState = 'M';
+				Log("BEST_UPDATE: M(%u,%u)=%.3f (prev=%.3f, state=M) [tb=0x%02x]\n", 
+					i, j, m_new, old_best, tb_m);
+				}
+			if (Drow[j] >= BestScore)
+				{
+				float old_best = BestScore;
+				BestScore = Drow[j];
+				Besti = i;
+				Bestj = j;
+				BestState = 'D';
+				Log("BEST_UPDATE: D(%u,%u)=%.3f (prev=%.3f, state=D) [tb=0x%02x]\n", 
+					i, j, Drow[j], old_best, tb_d);
+				}
+			if (i_curr >= BestScore)
+				{
+				float old_best = BestScore;
+				BestScore = i_curr;
+				Besti = i;
+				Bestj = j;
+				BestState = 'I';
+				Log("BEST_UPDATE: I(%u,%u)=%.3f (prev=%.3f, state=I) [tb=0x%02x]\n", 
+					i, j, i_curr, old_best, tb_i);
+				}
+		
+			// Store M(i,j) in the matrix
+			Mrow[j] = m_new;
+			
+			// Pass M(i,j) to the next iteration, where it will be M(i,j-1)
+			m_left = m_new;
+			
+			// Store trace bits separately for each state
+			TB_M_row[j] = tb_m;
+			TB_D_row[j] = tb_d;
+			TB_I_row[j] = tb_i;
+			
+#if DEBUG
+			// Only log cells with meaningful scores, interesting traceback bits, or potential issues
+			bool has_meaningful_output = (m_new > MINUS_INFINITY) || (Drow[j] > MINUS_INFINITY) || (i_curr > MINUS_INFINITY);
+			bool has_interesting_traceback = (tb_m & TRACEBITS_SM) || (tb_d & TRACEBITS_MD) || (tb_i & TRACEBITS_MI);
+			bool is_potential_issue = (m_new > 0 && m_new < 1.0) || (Drow[j] > 0 && Drow[j] < 1.0) || (i_curr > 0 && i_curr < 1.0);
+			
+			if (has_meaningful_input || has_meaningful_output || has_interesting_traceback || is_potential_issue)
+				{
+				// Compact format: Cell(i,j) [inputs] -> [outputs] [traceback]
+				Log("(%u,%u) [m_d=%.1f d_d=%.1f i_d=%.1f m_u=%.1f d_u=%.1f i_u=%.1f i_c=%.1f] -> [M=%.2f D=%.2f I=%.2f] [tb_m=0x%02x tb_d=0x%02x tb_i=0x%02x]\n",
+					i, j, 
+					m_diag > MINUS_INFINITY ? m_diag : 0, d_diag > MINUS_INFINITY ? d_diag : 0, i_diag > MINUS_INFINITY ? i_diag : 0,
+					m_up > MINUS_INFINITY ? m_up : 0, d_up_pristine > MINUS_INFINITY ? d_up_pristine : 0, 
+					i_up_pristine > MINUS_INFINITY ? i_up_pristine : 0, i_curr > MINUS_INFINITY ? i_curr : 0,
+					m_new > MINUS_INFINITY ? m_new : 0, Drow[j] > MINUS_INFINITY ? Drow[j] : 0, i_curr > MINUS_INFINITY ? i_curr : 0,
+					tb_m, tb_d, tb_i);
+				}
+#endif
+			
+			// Update state for next iteration (j+1)
+			// The values from (i-1,j) become diagonal predecessors for (i-1,j+1)
+			m_diag = m_up; // M(i-1,j) becomes M(i-1,j-1) for next j
+			d_diag = d_up_pristine; // D(i-1,j) becomes D(i-1,j-1) for next j
+			i_diag = i_up_pristine; // I(i-1,j) becomes I(i-1,j-1) for next j
+			// i_curr will be updated to I(i,j+1) in the next iteration
 			}
 
 	// Special case for end of Drow[]
 		if (jhi < LB)
 			{
 			const uint jhi1 = jhi+1;
-			TBrow[jhi1] = 0;
-			float md = M0 + Open;
-			Drow[jhi1] += Ext;
+			TB_D[i][jhi1] = 0;
+			float md = Mrow[jhi1] + Open; // M(i-1,jhi1) + Open
+			Drow[jhi1] += Ext; // D(i-1,jhi1) + Ext
 			if (md >= Drow[jhi1])
 				{
 				Drow[jhi1] = md;
-				TBrow[jhi1] = TRACEBITS_MD;
+				TB_D[i][jhi1] = TRACEBITS_MD;
 				TRACE_D(i, jhi1, md);
 				}
 			}
@@ -330,22 +471,29 @@ float XDropFwd(XDPMem &Mem,
 
 		if (jlo == prev_jlo)
 			{
-			M0 = MINUS_INFINITY;
+			// No change in jlo, initialize for next row
+			// M0 will be set from Mrow[jlo-1] in the loop
 			Drow[jlo] = MINUS_INFINITY;
+			Irow[jlo] = MINUS_INFINITY;
 			TRACE_D(i, jlo, MINUS_INFINITY);
 			}
 		else
 			{
 			assert(jlo > prev_jlo);
-			M0 = Mrow[jlo-1];
+			// jlo increased, M0 will be set from Mrow[jlo-1] in the loop
 			}
 		}
 
-	DONE_TRACE(BestScore, Besti, Bestj, TB);
+	DONE_TRACE(BestScore, Besti, Bestj, TB_M);
 	if (BestScore <= 0.0f)
 		return 0.0f;
 
-	TraceBack(Mem, Besti, Bestj, Path);
+	Log("TRACEBACK_START: BestScore=%.3f, Besti=%u, Bestj=%u, BestState=%c\n", 
+		BestScore, Besti, Bestj, BestState);
+	Log("TRACEBACK_START: About to call TraceBack(Mem, %u, %u, %c, Path)\n", 
+		Besti, Bestj, BestState);
+
+	TraceBack(Mem, Besti, Bestj, BestState, Path);
 	uint nM, nD, nI;
 	GetPathCounts(Path, nM, nD, nI);
 	uint Loi = LoA + Besti - nM - nD;
@@ -353,34 +501,86 @@ float XDropFwd(XDPMem &Mem,
 	*ptrSegLoA = Loi;
 	*ptrSegLoB = Loj;
 
-#if DEBUG
 	{
 	const uint ColCount = SIZE(Path);
 	uint PosA = Loi;
 	uint PosB = Loj;
-	float Score2 = 0;
+	float Score2WithGaps = 0;
+	char prevState = '\0'; // Previous state to track gap transitions (null for first character)
+	
+	Log("SCORE_VERIFICATION: Starting recalculation\n");
+	Log("SCORE_VERIFICATION: Path=\"%s\" (length=%u)\n", Path.c_str(), ColCount);
+	Log("SCORE_VERIFICATION: StartPos=(%u,%u), BestPos=(%u,%u), BestState=%c\n", 
+		Loi, Loj, Besti, Bestj, BestState);
+	Log("SCORE_VERIFICATION: Path counts: M=%u D=%u I=%u\n", nM, nD, nI);
+	
 	for (uint Col = 0; Col < ColCount; ++Col)
 		{
 		char c = Path[Col];
+		float step_score = 0;
 		switch (c)
 			{
 		case 'M': 
-			Score2 += SubFn(UserData, PosA, PosB);
+			step_score = SubFn(UserData, PosA, PosB);
+			Score2WithGaps += step_score;
+			Log("SCORE_VERIFICATION: step=%u M(%u,%u) score=%.3f total=%.3f\n", 
+				Col, PosA, PosB, step_score, Score2WithGaps);
 			++PosA;
 			++PosB;
 			break;
 
 		case 'D':
+			// Add gap penalty: Open for first gap, Ext for extension
+			if (prevState == 'D')
+				{
+				step_score = Ext; // Gap extension
+				Log("SCORE_VERIFICATION: step=%u D(%u,%u) gap_ext=%.3f total=%.3f\n", 
+					Col, PosA, PosB, step_score, Score2WithGaps + step_score);
+				}
+			else
+				{
+				step_score = Open; // Gap opening (including first gap)
+				Log("SCORE_VERIFICATION: step=%u D(%u,%u) gap_open=%.3f total=%.3f\n", 
+					Col, PosA, PosB, step_score, Score2WithGaps + step_score);
+				}
+			Score2WithGaps += step_score;
 			++PosA;
 			break;
 
 		case 'I':
+			// Add gap penalty: Open for first gap, Ext for extension
+			if (prevState == 'I')
+				{
+				step_score = Ext; // Gap extension
+				Log("SCORE_VERIFICATION: step=%u I(%u,%u) gap_ext=%.3f total=%.3f\n", 
+					Col, PosA, PosB, step_score, Score2WithGaps + step_score);
+				}
+			else
+				{
+				step_score = Open; // Gap opening (including first gap)
+				Log("SCORE_VERIFICATION: step=%u I(%u,%u) gap_open=%.3f total=%.3f\n", 
+					Col, PosA, PosB, step_score, Score2WithGaps + step_score);
+				}
+			Score2WithGaps += step_score;
 			++PosB;
 			break;
 			}
+		prevState = c;
 		}
-	asserta(Score2 + 0.1 >= BestScore);
+	// Compare full score (including gap penalties) with DP result
+	float score_diff = fabs(Score2WithGaps - BestScore);
+	Log("SCORE_VERIFICATION: BestScore=%.3f, RecalculatedScore=%.3f, Diff=%.3f\n", 
+		BestScore, Score2WithGaps, score_diff);
+	if (score_diff >= 0.1)
+		{
+		Log("ERROR: Score mismatch detected! This will trigger assertion failure.\n");
+		Log("ERROR: BestScore=%.3f vs RecalculatedScore=%.3f (diff=%.3f)\n", 
+			BestScore, Score2WithGaps, score_diff);
+		Log("ERROR: Path=\"%s\"\n", Path.c_str());
+		Log("ERROR: BestPos=(%u,%u) state=%c, StartPos=(%u,%u)\n", 
+			Besti, Bestj, BestState, Loi, Loj);
+		}
+	asserta(score_diff < 0.1);
 	}
-#endif
 	return BestScore;
 	}

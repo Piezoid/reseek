@@ -17,11 +17,14 @@ class XDPMem
 public:
 	unsigned m_LA = 0;
 	unsigned m_LB = 0;
-	Mx<byte> m_TBBit;
+	Mx<byte> m_TB_M; // Traceback matrix for Match state
+	Mx<byte> m_TB_D; // Traceback matrix for Delete state
+	Mx<byte> m_TB_I; // Traceback matrix for Insert state
 	byte *m_RevA = 0;
 	byte *m_RevB = 0;
 	float *m_Buffer1 = 0;
 	float *m_Buffer2 = 0;
+	float *m_Buffer3 = 0; // For Irow
 	int *m_Buffer1_Int = 0;
 
 private:
@@ -36,6 +39,7 @@ public:
 		m_RevB = 0;
 		m_Buffer1 = 0;
 		m_Buffer2 = 0;
+		m_Buffer3 = 0;
 		m_Buffer1_Int = 0;
 		}
 
@@ -48,11 +52,14 @@ public:
 		{
 		myfree(m_Buffer1);
 		myfree(m_Buffer2);
+		myfree(m_Buffer3);
 		myfree(m_Buffer1_Int);
 		myfree(m_RevA);
 		myfree(m_RevB);
 
-		m_TBBit.Clear();
+		m_TB_M.Clear();
+		m_TB_D.Clear();
+		m_TB_I.Clear();
 		
 		m_LA = 0;
 		m_LB = 0;
@@ -60,6 +67,7 @@ public:
 		m_RevB = 0;
 		m_Buffer1 = 0;
 		m_Buffer2 = 0;
+		m_Buffer3 = 0;
 		m_Buffer1_Int = 0;
 		}
 
@@ -73,9 +81,25 @@ public:
 		return m_RevB;
 		}
 
+	byte **GetTBM()
+		{
+		return m_TB_M.GetData();
+		}
+
+	byte **GetTBD()
+		{
+		return m_TB_D.GetData();
+		}
+
+	byte **GetTBI()
+		{
+		return m_TB_I.GetData();
+		}
+
+	// Legacy method for backward compatibility with other functions
 	byte **GetTBBit()
 		{
-		return m_TBBit.GetData();
+		return m_TB_M.GetData(); // Return M matrix as default
 		}
 
 	int *GetDPRow1Int()
@@ -93,16 +117,24 @@ public:
 		return m_Buffer2 + 1;
 		}
 
+	float *GetIrow()
+		{
+		return m_Buffer3 + 1;
+		}
+
 	void Alloc(unsigned LA, unsigned LB)
 		{
 		Clear();
 		m_LA = LA;
 		m_LB = LB;
-		m_TBBit.Alloc(LA+8, LB+8, __FILE__, __LINE__);
+		m_TB_M.Alloc(LA+8, LB+8, __FILE__, __LINE__);
+		m_TB_D.Alloc(LA+8, LB+8, __FILE__, __LINE__);
+		m_TB_I.Alloc(LA+8, LB+8, __FILE__, __LINE__);
 
 		m_Buffer1 = myalloc(float, LB+8);
 		m_Buffer1_Int = myalloc(int, m_LB+8);
 		m_Buffer2 = myalloc(float, m_LB+8);
+		m_Buffer3 = myalloc(float, m_LB+8);
 		m_RevA = myalloc(byte, LA+8);
 		m_RevB = myalloc(byte, LB+8);
 		}

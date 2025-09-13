@@ -3,49 +3,50 @@
 #define TRACE	0
 #define DOTONLY	0
 
-static inline char GetTBBitM(byte **TB, uint i, uint j)
+static inline char GetTBBitM(byte t)
 	{
-	byte c = TB[i][j];
 #if	DEBUG
-	if (c == TRACEBITS_UNINIT)
+	if (t == TRACEBITS_UNINIT)
 		return 'u';
 #endif
-	if (c & TRACEBITS_DM)
+	if (t & TRACEBITS_DM)
 		return 'D';
-	if (c & TRACEBITS_IM)
+	if (t & TRACEBITS_IM)
 		return 'I';
 	return 'M';
 	}
 
-static inline char GetTBBitD(byte **TB, uint i, uint j)
+static inline char GetTBBitD(byte t)
 	{
-	byte c = TB[i][j+1];
 #if	DEBUG
-	if (c == TRACEBITS_UNINIT)
+	if (t == TRACEBITS_UNINIT)
 		return 'u';
 #endif
-	if (c & TRACEBITS_MD)
+	if (t & TRACEBITS_MD)
 		return 'M';
-	return 'D';
+	if (t & TRACEBITS_DD)
+		return 'D';
+	return 'u'; // Uninitialized or invalid
 	}
 
-static inline char GetTBBitI(byte **TB, uint i, uint j)
+static inline char GetTBBitI(byte t)
 	{
-	byte c = TB[i+1][j];
 #if	DEBUG
-	if (c == TRACEBITS_UNINIT)
+	if (t == TRACEBITS_UNINIT)
 		return 'u';
 #endif
-	if (c & TRACEBITS_MI)
+	if (t & TRACEBITS_MI)
 		return 'M';
-	return 'I';
+	if (t & TRACEBITS_II)
+		return 'I';
+	return 'u'; // Uninitialized or invalid
 	}
 
 #if TRACE
 
-static inline char GetTBBitM(byte **TB, uint i, uint j);
-static inline char GetTBBitD(byte **TB, uint i, uint j);
-static inline char GetTBBitI(byte **TB, uint i, uint j);
+static inline char GetTBBitM(byte t);
+static inline char GetTBBitD(byte t);
+static inline char GetTBBitI(byte t);
 
 static uint g_LA;
 static uint g_LB;
@@ -173,9 +174,9 @@ static void DONE_TRACE(float BestScore, uint i, uint j, byte **TB)
 				Log(" -u-");
 			else
 				Log(" %c%c%c",
-				  GetTBBitM(TB, i, j),
-				  GetTBBitD(TB, i, j),
-				  GetTBBitI(TB, i, j));
+				  GetTBBitM(TB[i][j]),
+				  GetTBBitD(TB[i][j]),
+				  GetTBBitI(TB[i][j]));
 			}
 		Log("\n");
 		}
