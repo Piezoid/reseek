@@ -102,10 +102,10 @@ float XDropFwd(XDPMem &Mem,
 	Matrix<byte>& TB = Mem.GetTBBit();;
 	INIT_TRACE(LA, LB, TB);
 
-	float *Mrow = Mem.GetDPRow1();
-	float *Drow = Mem.GetDPRow2();
+	span<float> Mrow = Mem.GetDPRow1();
+	span<float> Drow = Mem.GetDPRow2();
 
-	Mrow[-1] = MINUS_INFINITY;
+	*(Mrow.data() - 1) = MINUS_INFINITY;
 	TRACE_M(0, -1, MINUS_INFINITY);
 
 	Drow[0] = MINUS_INFINITY;

@@ -12,9 +12,9 @@ static float SWGaplessNoTB(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint 
 
 	Mem.Alloc(LA+32, LB+32);
 
-	float *Mrow = Mem.GetDPRow1();
+	span<float> Mrow = Mem.GetDPRow1();
 
-	Mrow[-1] = MINUS_INFINITY;
+	*(Mrow.data() - 1) = MINUS_INFINITY;
 	for (uint j = 0; j <= LB; ++j)
 		Mrow[j] = MINUS_INFINITY;
 	
@@ -52,10 +52,10 @@ float SWFastGapless(XDPMem &Mem, const Matrix<float> &SMx, uint LA, uint LB,
 	Besti = UINT_MAX;
 	Bestj = UINT_MAX;
 
-	float *Mrow = Mem.GetDPRow1();
+	span<float> Mrow = Mem.GetDPRow1();
 
 // Use Mrow[-1], so...
-	Mrow[-1] = MINUS_INFINITY;
+	*(Mrow.data() - 1) = MINUS_INFINITY;
 	for (uint j = 0; j <= LB; ++j)
 		Mrow[j] = MINUS_INFINITY;
 	
