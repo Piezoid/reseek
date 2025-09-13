@@ -13,7 +13,11 @@ public:
     span(T *data, size_t size) : m_data(data), m_size(size) {}
     T *data() const { return m_data; }
     size_t size() const { return m_size; }
-    T &operator[](size_t index) const { return m_data[(size_t) index]; }
+    T &operator[](size_t index) const
+        {
+        assert(index < m_size);
+        return m_data[(size_t) index];
+        }
     };
 
 
@@ -80,8 +84,16 @@ public:
     uint Rows() const { return m_rows; }
     uint Cols() const { return m_cols; }
 
-    span<T> operator[](uint row) { return span<T>(m_data + (size_t) row * (size_t) m_cols, m_cols); }
-    span<const T> operator[](uint row) const { return span<const T>(m_data + (size_t) row * (size_t) m_cols, m_cols); }
+    span<T> operator[](uint row)
+        {
+        assert(row < m_rows);
+        return span<T>(m_data + (size_t) row * (size_t) m_cols, m_cols);
+        }
+    span<const T> operator[](uint row) const
+        {
+        assert(row < m_rows);
+        return span<const T>(m_data + (size_t) row * (size_t) m_cols, m_cols);
+        }
 
     ~Matrix() { if (m_OwnData) myfree(m_data); }
     };
@@ -144,8 +156,16 @@ template<class T> class SquareMatrix {
         uint Rows() const { return m_size; }
         uint Cols() const { return m_size; }
 
-        span<T> operator[](uint row) { return span<T>(m_data + (size_t) row * (size_t) m_size, m_size); }
-        span<const T> operator[](uint row) const { return span<const T>(m_data + (size_t) row * (size_t) m_size, m_size); }
+        span<T> operator[](uint row)
+            {
+            assert(row < m_size);
+            return span<T>(m_data + (size_t) row * (size_t) m_size, m_size);
+            }
+        span<const T> operator[](uint row) const
+            {
+            assert(row < m_size);
+            return span<const T>(m_data + (size_t) row * (size_t) m_size, m_size);
+            }
 
         ~SquareMatrix() { if (m_OwnData) myfree((void*) m_data); }
     };
