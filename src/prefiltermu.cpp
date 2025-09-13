@@ -26,8 +26,45 @@ int PrefilterMu::FindHSP(uint QSeqIdx, int Diag) const
 
 	int B = 0;
 	int F = 0;
-	for (int k = 0; k < n; ++k)
+	int k;
+	for (k = 0; k < n-1; k+=2)
 		{
+		assert(i < int(QL));
+		assert(j < int(m_TL));
+		byte q = QSeq[i++];
+		byte t = m_TSeq[j++];
+		assert(q < ALPHABET_SIZE);
+		assert(t < ALPHABET_SIZE);
+		short Score = m_SubstMatrix[q][t];
+		F += Score;
+#if TRACE
+		if (DoTrace(QSeqIdx)) Log(" i=%u j=%u F=%d B=%d score=%d\n", i, j, F, B, Score);
+#endif
+		if (F > B)
+			B = F;
+		else if (F < 0)
+			F = 0;
+
+		assert(i < int(QL));
+		assert(j < int(m_TL));
+		q = QSeq[i++];
+		t = m_TSeq[j++];
+		assert(q < ALPHABET_SIZE);
+		assert(t < ALPHABET_SIZE);
+		Score = m_SubstMatrix[q][t];
+		F += Score;
+#if TRACE
+		if (DoTrace(QSeqIdx)) Log(" i=%u j=%u F=%d B=%d score=%d\n", i, j, F, B, Score);
+#endif
+		if (F > B)
+			B = F;
+		else if (F < 0)
+			F = 0;
+		}
+
+	if(k < n)
+	    {
+		assert(k == n-1);
 		assert(i < int(QL));
 		assert(j < int(m_TL));
 		byte q = QSeq[i++];
